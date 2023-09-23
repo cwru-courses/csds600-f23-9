@@ -1,5 +1,16 @@
 package edu.cwru.sepia.agent;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
 import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.environment.model.history.History;
 import edu.cwru.sepia.environment.model.state.ResourceNode;
@@ -7,21 +18,47 @@ import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.util.Direction;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.*;
-
 public class AstarAgent extends Agent {
 
     class MapLocation
     {
-        public int x, y;
+        @Override
+		public String toString() {
+			return "MapLocation [x=" + x + ", y=" + y + ", cameFrom=" + cameFrom + ", cost=" + cost + ", hCost=" + hCost
+					+ ", gCost=" + gCost + ", start=" + start + ", goal=" + goal + ", solid=" + solid + ", opened="
+					+ opened + ", checked=" + checked + "]";
+		}
 
-        public MapLocation(int x, int y, MapLocation cameFrom, float cost)
+		public int x, y;
+        public MapLocation cameFrom;
+        public int cost;
+        public int hCost;
+        public int gCost;
+        boolean start;
+        boolean goal;
+        boolean solid;
+        boolean opened;
+        boolean checked;
+
+        public MapLocation(int x, int y, MapLocation cameFrom, int cost)
         {
             this.x = x;
             this.y = y;
+            this.cameFrom = cameFrom;
+            this.cost = cost;
+            opened = false;
+            solid=false;
+            checked = false;
         }
+        
+        public void setAsOpen() {
+        	opened = true;
+        }
+        
+        public void setAsChecked() {
+        	checked = true;
+        }
+        
     }
 
     Stack<MapLocation> path;
@@ -214,37 +251,10 @@ public class AstarAgent extends Agent {
      * @param currentPath
      * @return
      */
-    
-    private boolean shouldReplanPath(State.StateView state, History.HistoryView history, Stack<MapLocation> currentPath){
-	    
-	    Unit.UnitView fmanUnit = state.getUnit(footmanID);
-	    int footmanX = fmanUnit.getXPosition();
-	    int footmanY = fmanUnit.getYPosition();
-
-	    // To get the current position of enemy
-	    Unit.UnitView enemyFmanUnit = state.getUnit(enemyFootmanID);
-	    int enemyFmanX = enemyFmanUnit.getXPosition();
-	    int enemyFmanY = enemyFmanUnit.getYPosition();
-
-	    // To check if enemy is moving closer to footman
-	    if (currentPath != null && !currentPath.isEmpty()) {
-	        MapLocation nextLocation = currentPath.peek();
-	        int nextX = nextLocation.x;
-	        int nextY = nextLocation.y;
-
-	        // to find the distance from enemy foot man to present and future steps (Euclidean distance)
-	        double presentDistance = Math.sqrt(Math.pow(enemyFmanX - footmanX, 2) + Math.pow(enemyFmanY - footmanY, 2));
-	        double futureDistance = Math.sqrt(Math.pow(enemyFmanX - nextX, 2) + Math.pow(enemyFmanY - nextY, 2));
-
-	         // condition to check weather enemy is closing or not 
-	        if (futureDistance < presentDistance) {
-	            return true;
-	        }
-	    }
-    	
-    	     return false;
-    	
-        
+    private boolean shouldReplanPath(State.StateView state, History.HistoryView history, Stack<MapLocation> currentPath)
+    {
+        //return false;
+        return true;
     }
 
     /**
@@ -278,9 +288,14 @@ public class AstarAgent extends Agent {
 
             resourceLocations.add(new MapLocation(resource.getXPosition(), resource.getYPosition(), null, 0));
         }
+    	System.out.println("locationStart:: "+ startLoc.toString());
+    	System.out.println("locationGoal:: "+ goalLoc.toString());
+    	goalLoc.goal=true;
+    	startLoc.start=true;
 
         return AstarSearch(startLoc, goalLoc, state.getXExtent(), state.getYExtent(), footmanLoc, resourceLocations);
     }
+    
     /**
      * This is the method you will implement for the assignment. Your implementation
      * will use the A* algorithm to compute the optimum path from the start position to
@@ -325,16 +340,131 @@ public class AstarAgent extends Agent {
      *
      * @param start Starting position of the footman
      * @param goal MapLocation of the townhall
-     * @param xExtent Width of the map
-     * @param yExtent Height of the map
+     * @param xExtent Width of the map 0,4
+     * @param yExtent Height of the map 0,2
      * @param resourceLocations Set of positions occupied by resources
      * @return Stack of positions with top of stack being first move in plan
      */
-    private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations)
+    private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, 
+    		Set<MapLocation> resourceLocations)
     {
-        // return an empty path
-        return new Stack<MapLocation>();
+    	System.out.println("locationStart:: "+ start.toString());
+    	System.out.println("locationGoal:: "+ goal.toString());
+    	ArrayList<MapLocation> openList = new ArrayList<>();
+    	ArrayList<MapLocation> checkedList = new ArrayList<>();
+    	Stack<MapLocation> locationStack = new Stack<>();
+    	//locationStack.add(start);
+    	MapLocation currentNode = start;
+    	
+    	boolean goalReached = false;
+    	
+    	int count = 0;
+    	while(goalReached == false && count< 3600) {
+    		int col = currentNode.x;
+    		int row = currentNode.y;
+    		
+    		currentNode.setAsChecked();
+    		checkedList.add(currentNode);
+    		openList.remove(currentNode);
+    		
+    		//Open Top Node
+    		if(row-1>=0) {
+    			openNode(new MapLocation(col,row-1,null,0), openList, currentNode,goal);
+    		}
+    		//Open the Left Node
+    		if(col-1>=0) {
+    			openNode(new MapLocation(col-1,row,null,0), openList, currentNode,goal);
+    		}
+    		//Open Down Node
+    		if(row+1<yExtent) {
+    			openNode(new MapLocation(col,row+1,null,0), openList, currentNode,goal);
+    		}
+    		//Open Right Node
+    		if(col+1<xExtent) {
+    			openNode(new MapLocation(col+1,row,null,0), openList, currentNode,goal);
+    		}
+    		
+    		//Find the Best Node
+    		int bestNodeIndex=0;
+    		int bestNodefCost=999;
+    		for(int i=0; i< openList.size();i++) {
+    			//Check's if this node's F's cost is better
+    			if(openList.get(i).cost < bestNodefCost) {
+    				bestNodeIndex = i;
+    				bestNodefCost = openList.get(i).cost;
+    			}
+    			else if(openList.get(i).cost == bestNodefCost) {
+    				if(openList.get(i).gCost < openList.get(bestNodeIndex).gCost) {
+    					bestNodeIndex = i;
+    				}
+    			}
+    		}
+    		// After the loop we get the best node 
+    		currentNode= openList.get(bestNodeIndex);
+    		locationStack.add(currentNode);
+
+    		//MapLocation cameFrom = currentNode.cameFrom;
+    		//currentNode.cameFrom=null;
+    		if(currentNode.x==goal.x && currentNode.y==goal.y) {
+    			System.err.println("goal Node Reached:: "+ goal.toString());
+    			goalReached = true;
+    			//System.out.println(currentNode.x);
+    		}else {
+    			//currentNode.cameFrom = cameFrom;
+    		}
+    		
+    		count++;
+    	}
+    	
+    	if(count>=3600) {
+    		System.err.println("count exceeded:: ");
+    		
+    	}
+    	
+    	Collections.reverse(locationStack);
+    	System.err.println("locationSTack:: "+ locationStack.toString());
+        return locationStack;
     }
+    
+    private void path(MapLocation goal, MapLocation startNode) {
+    	MapLocation current = goal;
+    	while(current!=startNode) {
+    		current = current.cameFrom;
+    		if(current!=startNode) {
+    			System.out.println(current.x);
+    		}
+    	}
+    }
+    
+    private void openNode(MapLocation loc, ArrayList<MapLocation> openList, MapLocation currentNode, MapLocation goal) {
+    	if(loc.opened == false && loc.checked==false && loc.solid==false) {
+    		loc.setAsOpen();
+    		openList.add(loc);
+    		getCost(loc,currentNode,goal);
+    		//loc.cameFrom=currentNode;
+    	}
+    }
+    
+    
+    private void getCost(MapLocation loc, MapLocation start, MapLocation goal) {
+    	// G Cost
+    	int xDist = Math.abs(loc.x - start.x);
+    	int yDist = Math.abs(loc.y - start.y);
+    	loc.gCost = xDist + yDist;
+    	
+    	//H Cost
+    	xDist = Math.abs(loc.x - goal.x);
+    	yDist = Math.abs(loc.y - goal.y);
+    	loc.hCost = xDist + yDist;
+    	
+    	//F Cost
+    	loc.cost = loc.gCost + loc.hCost;
+    }
+    
+    private int heuristic(MapLocation a, MapLocation b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+    
 
     /**
      * Primitive actions take a direction (e.g. Direction.NORTH, Direction.NORTHEAST, etc)
