@@ -215,9 +215,9 @@ public class AstarAgent extends Agent {
      * @return
      */
     
-	private boolean shouldReplanPath(State.StateView state, History.HistoryView history, Stack<MapLocation> currentPath)
-    {	
-		Unit.UnitView fmanUnit = state.getUnit(footmanID);
+    private boolean shouldReplanPath(State.StateView state, History.HistoryView history, Stack<MapLocation> currentPath){
+	    
+	    Unit.UnitView fmanUnit = state.getUnit(footmanID);
 	    int footmanX = fmanUnit.getXPosition();
 	    int footmanY = fmanUnit.getYPosition();
 
@@ -226,11 +226,11 @@ public class AstarAgent extends Agent {
 	    int enemyFmanX = enemyFmanUnit.getXPosition();
 	    int enemyFmanY = enemyFmanUnit.getYPosition();
 
-	    // Check if the enemy footman is moving closer to your footman
+	    // To check if enemy is moving closer to footman
 	    if (currentPath != null && !currentPath.isEmpty()) {
-	        MapLocation nextLoc = currentPath.peek();
-	        int nextX = nextLoc.x;
-	        int nextY = nextLoc.y;
+	        MapLocation nextLocation = currentPath.peek();
+	        int nextX = nextLocation.x;
+	        int nextY = nextLocation.y;
 
 	        // to find the distance from enemy foot man to present and future steps (Euclidean distance)
 	        double presentDistance = Math.sqrt(Math.pow(enemyFmanX - footmanX, 2) + Math.pow(enemyFmanY - footmanY, 2));
@@ -242,7 +242,7 @@ public class AstarAgent extends Agent {
 	        }
 	    }
     	
-    	return false;
+    	     return false;
     	
         
     }
