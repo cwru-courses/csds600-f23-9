@@ -1,5 +1,4 @@
 package edu.cwru.sepia.agent;
-
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -455,7 +454,8 @@ public class AstarAgent extends Agent {
     	//H Cost
     	xDist = Math.abs(loc.x - goal.x);
     	yDist = Math.abs(loc.y - goal.y);
-    	loc.hCost = xDist + yDist;
+    	// Chebyshev distance (need to convert to heuristic method)
+    	loc.hCost = Math.max(xDist, yDist);
     	
     	//F Cost
     	loc.cost = loc.gCost + loc.hCost;
