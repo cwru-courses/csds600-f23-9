@@ -371,7 +371,6 @@ public class AstarAgent extends Agent {
     	ArrayList<MapLocation> closeList = new ArrayList<>();
     	ArrayList<MapLocation> checkedList = new ArrayList<>();
     	Stack<MapLocation> locationStack = new Stack<>();
-    	//locationStack.add(start);
     	MapLocation currentNode = start;
     	resourceLocations.stream().forEach(t->t.solid=true);
     	
@@ -429,14 +428,9 @@ public class AstarAgent extends Agent {
     		closeList.add(currentNode);
     		locationStack.add(currentNode);
 
-    		//MapLocation cameFrom = currentNode.cameFrom;
-    		//currentNode.cameFrom=null;
     		if(currentNode.x==goal.x && currentNode.y==goal.y) {
     			System.err.println("goal Node Reached:: "+ goal.toString());
     			goalReached = true;
-    			//System.out.println(currentNode.x);
-    		}else {
-    			//currentNode.cameFrom = cameFrom;
     		}
     		
     		count++;
@@ -468,7 +462,6 @@ public class AstarAgent extends Agent {
         		openList.add(loc);
     		}
     		getCost(loc,currentNode,goal);
-    		//loc.cameFrom=currentNode;
     	}
     }
     
@@ -558,6 +551,7 @@ public class AstarAgent extends Agent {
         {
             return Direction.NORTHEAST;
         }
+
         System.err.println("Invalid path. Could not determine direction");
         return null;
     }
