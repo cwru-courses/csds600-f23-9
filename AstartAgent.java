@@ -366,13 +366,13 @@ public class AstarAgent extends Agent {
     private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, 
     		Set<MapLocation> resourceLocations)
     {
-    	System.out.println("locationStart:: "+ start.toString());
-    	System.out.println("locationGoal:: "+ goal.toString());
+
     	ArrayList<MapLocation> openList = new ArrayList<>();
     	ArrayList<MapLocation> checkedList = new ArrayList<>();
     	Stack<MapLocation> locationStack = new Stack<>();
     	//locationStack.add(start);
     	MapLocation currentNode = start;
+    	resourceLocations.stream().forEach(t->t.solid=true);
     	
     	boolean goalReached = false;
     	
@@ -383,7 +383,8 @@ public class AstarAgent extends Agent {
     		
     		currentNode.setAsChecked();
     		checkedList.add(currentNode);
-    		openList.remove(currentNode);
+    		MapLocation[] currentNodeTemp = {currentNode};
+    		openList.removeIf(t->(t.x==currentNodeTemp[0].x && t.y==currentNodeTemp[0].y));
     		
     		//Open Top Node
     		if(row-1>=0) {
