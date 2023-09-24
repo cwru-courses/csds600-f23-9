@@ -10,5 +10,6 @@
 
 -> This method will be used to find the optimal path from start to goal position.
 -> Will be using A* Algorithm to implement the method.
+-> Implemented the method AstartSearch as of now the code is able to return the statck of MapLocations with ignoring tree resources.
 ->Will return a stack of locations which will be used to find the path.
-->
+-> 
