@@ -1,4 +1,5 @@
 package edu.cwru.sepia.agent;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -172,7 +173,6 @@ public class AstarAgent extends Agent {
         int footmanY = footmanUnit.getYPosition();
 
         if(!path.empty() && (nextLoc == null || (footmanX == nextLoc.x && footmanY == nextLoc.y))) {
-
             // stat moving to the next step in the path
             nextLoc = path.pop();
 
@@ -200,7 +200,7 @@ public class AstarAgent extends Agent {
             if(Math.abs(footmanX - townhallUnit.getXPosition()) > 1 ||
                     Math.abs(footmanY - townhallUnit.getYPosition()) > 1)
             {
-                System.err.println("Invalid plan. Cannot attack townhall");
+                //System.err.println("Invalid plan. Cannot attack townhall");
                 totalExecutionTime += System.nanoTime() - startTime - planTime;
                 return actions;
             }
@@ -368,6 +368,7 @@ public class AstarAgent extends Agent {
     {
 
     	ArrayList<MapLocation> openList = new ArrayList<>();
+    	ArrayList<MapLocation> closeList = new ArrayList<>();
     	ArrayList<MapLocation> checkedList = new ArrayList<>();
     	Stack<MapLocation> locationStack = new Stack<>();
     	//locationStack.add(start);
@@ -388,25 +389,30 @@ public class AstarAgent extends Agent {
     		
     		//Open Top Node
     		if(row-1>=0) {
-    			openNode(new MapLocation(col,row-1,null,0), openList, currentNode,goal);
+    			openNode(new MapLocation(col,row-1,null,0), openList, currentNode,goal,resourceLocations);
     		}
     		//Open the Left Node
     		if(col-1>=0) {
-    			openNode(new MapLocation(col-1,row,null,0), openList, currentNode,goal);
+    			openNode(new MapLocation(col-1,row,null,0), openList, currentNode,goal,resourceLocations);
     		}
     		//Open Down Node
     		if(row+1<yExtent) {
-    			openNode(new MapLocation(col,row+1,null,0), openList, currentNode,goal);
+    			openNode(new MapLocation(col,row+1,null,0), openList, currentNode,goal,resourceLocations);
     		}
     		//Open Right Node
     		if(col+1<xExtent) {
-    			openNode(new MapLocation(col+1,row,null,0), openList, currentNode,goal);
+    			openNode(new MapLocation(col+1,row,null,0), openList, currentNode,goal,resourceLocations);
     		}
     		
     		//Find the Best Node
     		int bestNodeIndex=0;
     		int bestNodefCost=999;
     		for(int i=0; i< openList.size();i++) {
+    			if(!closeList.isEmpty()) {
+    				closeList.stream().forEach(item->{
+    					openList.removeIf(it->(it.x==item.x && it.y==item.y));
+    				});
+    			}
     			//Check's if this node's F's cost is better
     			if(openList.get(i).cost < bestNodefCost) {
     				bestNodeIndex = i;
@@ -420,6 +426,7 @@ public class AstarAgent extends Agent {
     		}
     		// After the loop we get the best node 
     		currentNode= openList.get(bestNodeIndex);
+    		closeList.add(currentNode);
     		locationStack.add(currentNode);
 
     		//MapLocation cameFrom = currentNode.cameFrom;
@@ -441,24 +448,25 @@ public class AstarAgent extends Agent {
     	}
     	
     	Collections.reverse(locationStack);
+    	locationStack.remove(0);
     	System.err.println("locationSTack:: "+ locationStack.toString());
         return locationStack;
     }
     
-    private void path(MapLocation goal, MapLocation startNode) {
-    	MapLocation current = goal;
-    	while(current!=startNode) {
-    		current = current.cameFrom;
-    		if(current!=startNode) {
-    			System.out.println(current.x);
-    		}
-    	}
-    }
-    
-    private void openNode(MapLocation loc, ArrayList<MapLocation> openList, MapLocation currentNode, MapLocation goal) {
+    private void openNode(MapLocation loc, ArrayList<MapLocation> openList, MapLocation currentNode, MapLocation goal, Set<MapLocation> resourceLocations) {
     	if(loc.opened == false && loc.checked==false && loc.solid==false) {
     		loc.setAsOpen();
-    		openList.add(loc);
+    		loc.setAsChecked();
+    		boolean[] canAddtoOpenList = {true};
+    		resourceLocations.stream().forEach(resourceLocation->{
+    			
+    			if(resourceLocation.x == loc.x && resourceLocation.y == loc.y) {
+    				canAddtoOpenList[0]=false;
+    			}
+    		});
+    		if(canAddtoOpenList[0]) {
+        		openList.add(loc);
+    		}
     		getCost(loc,currentNode,goal);
     		//loc.cameFrom=currentNode;
     	}
@@ -479,10 +487,6 @@ public class AstarAgent extends Agent {
     	
     	//F Cost
     	loc.cost = loc.gCost + loc.hCost;
-    }
-    
-    private int heuristic(MapLocation a, MapLocation b) {
-        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
     }
     
 
@@ -530,7 +534,30 @@ public class AstarAgent extends Agent {
         {
             return Direction.NORTHWEST;
         }
-
+        else if(xDiff == 0 && yDiff >= 2)
+        {
+        	return Direction.SOUTH;
+        }        
+        else if(xDiff == 0 && yDiff < -1)
+        {
+        	return Direction.NORTH;
+        }
+        else if(xDiff <= -1 && yDiff <= -1)
+        {
+            return Direction.NORTHWEST;
+        }
+        else if(xDiff < -1 && yDiff == 1)
+        {
+            return Direction.SOUTHWEST;
+        }
+        else if(xDiff < -1 && yDiff == 0)
+        {
+            return Direction.WEST;
+        }
+        else if(xDiff > 1 && yDiff <= -1)
+        {
+            return Direction.NORTHEAST;
+        }
         System.err.println("Invalid path. Could not determine direction");
         return null;
     }
