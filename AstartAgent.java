@@ -306,8 +306,7 @@ public class AstarAgent extends Agent {
 
             resourceLocations.add(new MapLocation(resource.getXPosition(), resource.getYPosition(), null, 0));
         }
-    	System.out.println("locationStart:: "+ startLoc.toString());
-    	System.out.println("locationGoal:: "+ goalLoc.toString());
+
     	goalLoc.goal=true;
     	startLoc.start=true;
 
