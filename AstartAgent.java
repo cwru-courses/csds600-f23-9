@@ -252,8 +252,27 @@ public class AstarAgent extends Agent {
      */
     private boolean shouldReplanPath(State.StateView state, History.HistoryView history, Stack<MapLocation> currentPath)
     {
-        //return false;
-        return true;
+        // Get the positions of your footman and the enemy footman
+        Unit.UnitView myFootman = state.getUnit(footmanID);
+        Unit.UnitView enemyFootman = state.getUnit(enemyFootmanID);
+
+        if (myFootman != null && enemyFootman != null) {
+            // Define a proximity range (you can adjust this based on your needs)
+            int proximityRange = 2;
+
+            // Calculate the distance between your footman and the enemy footman
+            int xDiff = Math.abs(myFootman.getXPosition() - enemyFootman.getXPosition());
+            int yDiff = Math.abs(myFootman.getYPosition() - enemyFootman.getYPosition());
+
+            // If the enemy footman is within the proximity range, replan the path
+            if (xDiff <= proximityRange && yDiff <= proximityRange) {
+                System.out.println("Replanning path because enemy is too close.");
+                return true;
+            }
+        }
+
+        // If the enemy footman is not within the proximity range, continue with the current path
+        return false;
     }
 
     /**
