@@ -447,6 +447,14 @@ public class AstarAgent extends Agent {
     }
     
     private void openNode(MapLocation loc, ArrayList<MapLocation> openList, MapLocation currentNode, MapLocation goal, Set<MapLocation> resourceLocations) {
+    	
+    	openList.stream().forEach(item->{
+			if(loc.x==item.x && loc.y==item.y) {
+				loc.checked=true;
+				loc.opened=true;
+			}
+		});
+    	
     	if(loc.opened == false && loc.checked==false && loc.solid==false) {
     		loc.setAsOpen();
     		loc.setAsChecked();
