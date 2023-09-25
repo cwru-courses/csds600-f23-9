@@ -267,7 +267,7 @@ public class AstarAgent extends Agent {
             // If the enemy footman is within the proximity range, replan the path
             if (xDiff <= proximityRange && yDiff <= proximityRange) {
                 System.out.println("Replanning path because enemy is too close.");
-                return true;
+                return false;
             }
         }
 
@@ -387,20 +387,41 @@ public class AstarAgent extends Agent {
     		
     		//Open Top Node
     		if(row-1>=0) {
-    			openNode(new MapLocation(col,row-1,null,0), openList, currentNode,goal,resourceLocations);
+    			openNode(new MapLocation(col,row-1,null,0), openList, currentNode,goal,resourceLocations,closeList);
     		}
     		//Open the Left Node
     		if(col-1>=0) {
-    			openNode(new MapLocation(col-1,row,null,0), openList, currentNode,goal,resourceLocations);
+    			openNode(new MapLocation(col-1,row,null,0), openList, currentNode,goal,resourceLocations,closeList);
     		}
     		//Open Down Node
     		if(row+1<yExtent) {
-    			openNode(new MapLocation(col,row+1,null,0), openList, currentNode,goal,resourceLocations);
+    			openNode(new MapLocation(col,row+1,null,0), openList, currentNode,goal,resourceLocations,closeList);
     		}
     		//Open Right Node
     		if(col+1<xExtent) {
-    			openNode(new MapLocation(col+1,row,null,0), openList, currentNode,goal,resourceLocations);
+    			openNode(new MapLocation(col+1,row,null,0), openList, currentNode,goal,resourceLocations,closeList);
     		}
+    		
+    		if(col-1>=0) {
+    			// UP Left Diagonal
+        		openNode(new MapLocation(col-1,row-1,null,0), openList, currentNode,goal,resourceLocations,closeList);
+    		}
+    		
+    		if(col-1>=0) {
+        		// down left Diagonal
+        		openNode(new MapLocation(col-1,row+1,null,0), openList, currentNode,goal,resourceLocations,closeList);
+    		}
+    		
+    		if(col+1<yExtent) {
+    			// Down Right Diagonal
+        		openNode(new MapLocation(col+1,row+1,null,0), openList, currentNode,goal,resourceLocations,closeList);
+    		}
+    		
+    		if(col+1<xExtent) {
+        		// UP Right Diagonal
+        		openNode(new MapLocation(col+1,row-1,null,0), openList, currentNode,goal,resourceLocations,closeList);
+    		}
+    		
     		
     		//Find the Best Node
     		int bestNodeIndex=0;
@@ -426,6 +447,7 @@ public class AstarAgent extends Agent {
     		currentNode= openList.get(bestNodeIndex);
     		closeList.add(currentNode);
     		locationStack.add(currentNode);
+    		
 
     		if(currentNode.x==goal.x && currentNode.y==goal.y) {
     			System.err.println("goal Node Reached:: "+ goal.toString());
@@ -437,6 +459,7 @@ public class AstarAgent extends Agent {
     	
     	if(count>=3600) {
     		System.err.println("count exceeded:: ");
+    		throw new RuntimeException("Unable to find path!");
     		
     	}
     	
@@ -446,9 +469,17 @@ public class AstarAgent extends Agent {
         return locationStack;
     }
     
-    private void openNode(MapLocation loc, ArrayList<MapLocation> openList, MapLocation currentNode, MapLocation goal, Set<MapLocation> resourceLocations) {
+    private void openNode(MapLocation loc, ArrayList<MapLocation> openList, MapLocation currentNode, MapLocation goal, 
+    		Set<MapLocation> resourceLocations,ArrayList<MapLocation> closeList) {
     	
     	openList.stream().forEach(item->{
+			if(loc.x==item.x && loc.y==item.y) {
+				loc.checked=true;
+				loc.opened=true;
+			}
+		});
+    	
+    	closeList.stream().forEach(item->{
 			if(loc.x==item.x && loc.y==item.y) {
 				loc.checked=true;
 				loc.opened=true;
@@ -477,13 +508,15 @@ public class AstarAgent extends Agent {
     	// G Cost
     	int xDist = Math.abs(loc.x - start.x);
     	int yDist = Math.abs(loc.y - start.y);
-    	loc.gCost = xDist + yDist;
+    	loc.gCost = Math.max(xDist, yDist);
+    	//loc.gCost = xDist + yDist;
     	
     	//H Cost
     	xDist = Math.abs(loc.x - goal.x);
     	yDist = Math.abs(loc.y - goal.y);
     	// Chebyshev distance (need to convert to heuristic method)
     	loc.hCost = Math.max(xDist, yDist);
+    	//loc.hCost = xDist-yDist;
     	
     	//F Cost
     	loc.cost = loc.gCost + loc.hCost;
@@ -534,29 +567,43 @@ public class AstarAgent extends Agent {
         {
             return Direction.NORTHWEST;
         }
-        else if(xDiff == 0 && yDiff >= 2)
+        
+        
+        else if(xDiff == 0 && yDiff >= 1)
         {
         	return Direction.SOUTH;
         }        
-        else if(xDiff == 0 && yDiff < -1)
+        else if(xDiff == 0 && yDiff <= -1)
         {
         	return Direction.NORTH;
         }
         else if(xDiff <= -1 && yDiff <= -1)
         {
+        	//return Direction.WEST;
             return Direction.NORTHWEST;
         }
-        else if(xDiff < -1 && yDiff == 1)
+        else if(xDiff <= -1 && yDiff >= 1)
         {
+            //return Direction.SOUTH;
             return Direction.SOUTHWEST;
         }
-        else if(xDiff < -1 && yDiff == 0)
+        else if(xDiff <= -1 && yDiff == 0)
         {
             return Direction.WEST;
         }
-        else if(xDiff > 1 && yDiff <= -1)
+        else if(xDiff >= 1 && yDiff <= -1)
         {
+            //return Direction.NORTH;
             return Direction.NORTHEAST;
+        }
+        else if(xDiff >= 1 && yDiff == 0)
+        {
+            return Direction.EAST;
+        }
+        if(xDiff >= 1 && yDiff >= 1)
+        {
+            //return Direction.SOUTH;
+            return Direction.SOUTHEAST;
         }
 
         System.err.println("Invalid path. Could not determine direction");
