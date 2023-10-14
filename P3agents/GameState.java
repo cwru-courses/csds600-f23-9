@@ -6,7 +6,6 @@ import edu.cwru.sepia.agent.minimax.AstarAgent.*;
 import edu.cwru.sepia.environment.model.state.*;
 import edu.cwru.sepia.util.*;
 
-
 public class GameState {
 
     int xRange=0, yRange=0, playerHp, playerDamage, utility;
