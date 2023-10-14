@@ -1,11 +1,10 @@
 package edu.cwru.sepia.agent.minimax;
 
-import edu.cwru.sepia.environment.model.state.Unit;
+import edu.cwru.sepia.environment.model.state.*;
 
 public class PlayerData {
-
 	public int playerHp, xPosition, yPosition,playerDamage, id;
-	
+
 	public PlayerData(Unit.UnitView unitView) {
 		this.playerHp = unitView.getHP();
 		this.xPosition = unitView.getXPosition();
@@ -13,7 +12,8 @@ public class PlayerData {
 		this.playerDamage = unitView.getTemplateView().getBasicAttack();
 		id=unitView.getID();
 	}
-	
+
+
 	public PlayerData(PlayerData data){
         this.id = data.id;
 		this.xPosition = data.xPosition;
@@ -21,5 +21,5 @@ public class PlayerData {
 		this.playerHp = data.playerHp;
 		this.playerDamage = data.playerDamage;
 	}
-	
+
 }
