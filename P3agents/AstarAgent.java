@@ -156,9 +156,13 @@ public class AstarAgent {
 			List<MapLocation> childernsList = new ArrayList<>();
 
 			MapLocation[] actionsArray = new MapLocation[4];
+			// Expand Down Node
 			actionsArray[0] = new MapLocation(currentNode.x, currentNode.y + 1, currentNode, 0);
+			//Expand Left Node
 			actionsArray[1] = new MapLocation(currentNode.x - 1, currentNode.y, currentNode, 0);
+			// Expand Right Node
 			actionsArray[2] = new MapLocation(currentNode.x + 1, currentNode.y, currentNode, 0);
+			// Expand Top Node
 			actionsArray[3] = new MapLocation(currentNode.x, currentNode.y - 1, currentNode, 0);
 
 			for (MapLocation action : actionsArray) {
