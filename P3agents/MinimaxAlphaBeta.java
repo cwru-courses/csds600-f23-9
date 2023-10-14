@@ -7,10 +7,8 @@ import edu.cwru.sepia.environment.model.state.State;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 
 public class MinimaxAlphaBeta extends Agent {
 
@@ -74,52 +72,57 @@ public class MinimaxAlphaBeta extends Agent {
      * @param beta The current best value for the minimizing node from this node to the root
      * @return The best child of this node with updated values
      */
-    public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta)
-    {
-    	double getValue = getMinMaxValue(node, depth, alpha, beta,true);
-    	List<GameStateChild> childrens = node.state.getChildren();
-    	for(GameStateChild children: childrens) {
-    		if(children.state.getUtility()==getValue) {
-    			return children;
-    		}
-    	}
+    public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta) {
+        double getValue = getMinMaxValue(node, depth, alpha, beta, true);
+        List<GameStateChild> childrens = node.state.getChildren();
+        for (GameStateChild children : childrens) {
+            if (children.state.getUtility() == getValue) {
+                return children;
+            }
+        }
         return childrens.get(0);
     }
-    
-    private double getMinMaxValue(GameStateChild node, int depth, double alpha, double beta, boolean b) {
-    	if(depth<=0) {
-    		return node.state.getUtility();
-    	}
-    	double maxValue = Double.NEGATIVE_INFINITY;
-    	double minValue= Double.POSITIVE_INFINITY;
-    	
-    	double value=0;
-    	for(GameStateChild child : orderChildrenWithHeuristics(node.state.getChildren())) {
-    		if(b) {
-        		maxValue = Math.max(maxValue, getMinMaxValue(child, depth-1, alpha, beta,false));
-        		if(maxValue>=beta) {
+
+
+
+
+    private double getMinMaxValue (GameStateChild node, int depth, double alpha, double beta, boolean b){
+        if (depth <= 0) {
+            return node.state.getUtility();
+        }
+        double maxValue = Double.NEGATIVE_INFINITY;
+        double minValue = Double.POSITIVE_INFINITY;
+        
+        double value = 0;
+		for (GameStateChild child : orderChildrenWithHeuristics(node.state.getChildren())) {
+            if (b) {
+                maxValue = Math.max(maxValue, getMinMaxValue(child, depth - 1, alpha, beta, false));
+                if(maxValue >= beta){
         			return maxValue;
         		}
-        		alpha=Math.max(alpha, maxValue);
-        		value=maxValue;
-    		} else {
+        		alpha = Math.max(alpha, maxValue);
+                value = maxValue;
+            }
+            else {
                 minValue = Math.min(minValue, getMinMaxValue(child, depth - 1, alpha, beta, true));
                 if(minValue <= alpha){
     				return minValue;
     			}
     			beta = Math.min(minValue, beta);
                 value = minValue;
-    		}
+            }
     	}
-    	return value;
+        return value;
+
     }
+
 
     /**
      * You will implement this.
      *
      * Given a list of children you will order them according to heuristics you make up.
      * See the assignment description for suggestions on heuristics to use when sorting.
-     *
+     * Sort base on utility.
      * Use this function inside of your alphaBetaSearch method.
      *
      * Include a good comment about what your heuristics are and why you chose them.
@@ -127,8 +130,7 @@ public class MinimaxAlphaBeta extends Agent {
      * @param children
      * @return The list of children sorted by your heuristic.
      */
-    public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children)
-    {
+    public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children) {
     	List<GameStateChild> child = new ArrayList<>();
     	children.stream().forEach(t->{
     		child.add(t);
