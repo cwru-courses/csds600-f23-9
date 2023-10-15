@@ -98,12 +98,7 @@ public class GameState {
 		for (Unit.UnitView archer : archersEnemyTemp) {
 			this.archers.add(new PlayerData(archer));
 		}
-		for (Direction ValidDirection : Direction.values()) {
-			if (ValidDirection == Direction.WEST || ValidDirection == Direction.SOUTH ||
-					ValidDirection == Direction.NORTH || ValidDirection == Direction.EAST) {
-				this.directions.add(ValidDirection);
-            }
-		}
+		this.directions = Arrays.asList(Direction.EAST,Direction.SOUTH,Direction.NORTH,Direction.WEST);
 		System.out.println("Ended Object Construct");
 	}
 
@@ -125,14 +120,7 @@ public class GameState {
 		for (PlayerData data : gameState.archers) {
 			this.archers.add(new PlayerData(data));
 		}
-		Direction[] availableDirections = Direction.values();
-		List<Direction> directions = new ArrayList<>();
-		for(Direction dir : availableDirections) {
-			if (dir == Direction.NORTH || dir == Direction.EAST || dir == Direction.WEST || dir == Direction.SOUTH) {
-				directions.add(dir);
-            }
-		}
-		this.directions = directions;
+		this.directions = Arrays.asList(Direction.EAST,Direction.SOUTH,Direction.NORTH,Direction.WEST);
 	}
 
 	public void enforceActions(Map<Integer, Action> actions) throws Exception {
@@ -332,12 +320,7 @@ public class GameState {
 		aStartAgent = new AstarAgent(xRange, yRange);
         this.utility = utility;
         this.blockedResources = new ArrayList<>();
-		for (Direction ValidDirection : Direction.values()) {
-			if (ValidDirection == Direction.WEST || ValidDirection == Direction.SOUTH ||
-					ValidDirection == Direction.NORTH || ValidDirection == Direction.EAST) {
-				this.directions.add(ValidDirection);
-            }
-		}
+        this.directions = Arrays.asList(Direction.EAST,Direction.SOUTH,Direction.NORTH,Direction.WEST);
 	}
 
 
