@@ -200,6 +200,12 @@ public class GameState {
 	}
 
 
+	/**
+	 * 
+	 * @param footman
+	 * @param archer
+	 * @return
+	 */
     private int getPositionDistance(PlayerData footman, PlayerData archer) {
         return (int) Math.sqrt(Math.pow(Math.abs(footman.xPosition - archer.xPosition),2)+Math.pow(Math.abs(footman.yPosition - archer.yPosition), 2));
     }
@@ -309,6 +315,13 @@ public class GameState {
 
 
 
+	/**
+	 * 
+	 * @param actionMap
+	 * @param player1
+	 * @param player2
+	 * @return
+	 */
 	private boolean actionType(Map<Integer, Action> actionMap, int player1, int player2) {
 
 		PlayerData playerOneData = getUnit(player1);
@@ -331,6 +344,12 @@ public class GameState {
 
 
 
+	/**
+	 * 
+	 * @param player
+	 * @param archersList
+	 * @return
+	 */
 	private List<Action> getActions(PlayerData player, List<PlayerData> archersList) {
 
         List<PlayerData> players = new ArrayList<>();
@@ -358,6 +377,12 @@ public class GameState {
 
 
 
+	/**
+	 * Gives valid Directions based on the position of player
+	 * @param player
+	 * @param loc
+	 * @return
+	 */
 	private Direction getDirection(PlayerData player, MapLocation loc) {
 		if (player.xPosition == loc.x) {
 			if (player.yPosition - loc.y == 1) {
@@ -402,6 +427,12 @@ public class GameState {
 	}
 
 
+    /**
+     * Get archer playerData 
+     * @param player
+     * @param archerslist
+     * @return archer
+     */
     private PlayerData getArcher(PlayerData player, List<PlayerData> archerslist) {
 		int minDist = Integer.MAX_VALUE;
 
@@ -416,6 +447,12 @@ public class GameState {
         return archer;
 	}
 
+
+    /**
+     * Gives details of archers who can attack.
+     * @param player
+     * @return archers
+     */
 	private List<PlayerData> getArchersWhoCanAttack(PlayerData player) {
 		List<PlayerData> archers = new ArrayList<>();
 		for (PlayerData data : this.archers) {
