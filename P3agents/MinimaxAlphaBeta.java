@@ -20,7 +20,7 @@ public class MinimaxAlphaBeta extends Agent {
 
         if(args.length < 1)
         {
-            System.err.println("You must specify the number of plys");
+            System.err.println("You must specify the number of players");
             System.exit(1);
         }
 
@@ -138,16 +138,17 @@ public class MinimaxAlphaBeta extends Agent {
     	child.sort(new Comparator<GameStateChild>() {
     		@Override
     		public int compare(GameStateChild child1, GameStateChild child2) {
-    	        if (child2.state.getUtility() < child1.state.getUtility()) {
-    	    		return 1;
-    	    	} else if (child1.state.getUtility() > child2.state.getUtility()) {
-    	    		return -1;
-    	    	}
-    	        else {
-    	    		return 0;
-    	    	}
+	    	        if (child2.state.getUtility() < child1.state.getUtility()) {
+	    	    		return 1;
+	    	    	} 
+			else if (child1.state.getUtility() > child2.state.getUtility()) {
+	    	    		return -1;
+	    	    	}
+	    	        else {
+	    	    		return 0;
+	    	    	}
     		}
-		});
+	});
         return child;
     }
 }
