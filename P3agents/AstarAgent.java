@@ -58,55 +58,17 @@ public class AstarAgent {
 		return AstarSearch(startLoc, goalLoc, xExtent, yExtent, null, blockedResourceLocations);
 	}
 
-	/**
-	 * This is the method you will implement for the assignment. Your implementation
-	 * will use the A* algorithm to compute the optimum path from the start position
-	 * to a position adjacent to the goal position.
-	 *
-	 * Therefore your you need to find some possible adjacent steps which are in
-	 * range and are not trees or the enemy footman. Hint: Set<MapLocation>
-	 * resourceLocations contains the locations of trees
-	 *
-	 * You will return a Stack of positions with the top of the stack being the
-	 * first space to move to and the bottom of the stack being the last space to
-	 * move to. If there is no path to the townhall then return null from the method
-	 * and the agent will print a message and do nothing. The code to execute the
-	 * plan is provided for you in the middleStep method.
-	 *
-	 * As an example consider the following simple map
-	 *
-	 * F - - - - x x x - x H - - - -
-	 *
-	 * F is the footman H is the townhall x's are occupied spaces
-	 *
-	 * xExtent would be 5 for this map with valid X coordinates in the range of [0,
-	 * 4] x=0 is the left most column and x=4 is the right most column
-	 *
-	 * yExtent would be 3 for this map with valid Y coordinates in the range of [0,
-	 * 2] y=0 is the top most row and y=2 is the bottom most row
-	 *
-	 * resourceLocations would be {(0,1), (1,1), (2,1), (4,1)}
-	 *
-	 * The path would be
-	 *
-	 * (1,0) (2,0) (3,1) (2,2) (1,2)
-	 *
-	 * Notice how the initial footman position and the townhall position are not
-	 * included in the path stack
-	 *
-	 * @param start
-	 *            Starting position of the footman
-	 * @param goal
-	 *            MapLocation of the townhall
-	 * @param xExtent
-	 *            Width of the map
-	 * @param yExtent
-	 *            Height of the map
-	 * @param resourceLocations
-	 *            Set of positions occupied by resources
-	 * @return Stack of positions with top of stack being first move in plan
-	 */
 
+	/**
+	 *  Gives back the Stack of mapLocations that can be used to reach goal node from current
+	 * @param start
+	 * @param goal
+	 * @param xExtent
+	 * @param yExtent
+	 * @param enemyFootmanLoc
+	 * @param resourceLocations
+	 * @return
+	 */
 	private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent,
 			MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
 
@@ -115,8 +77,10 @@ public class AstarAgent {
 		startNode.hCost = getHeuristic(startNode, goal);
 		startNode.fCost = startNode.gCost + startNode.hCost;
 
+		//Stores the MapLocation Obj node which are being opened
 		List<MapLocation> openList = new ArrayList<>();
 		List<MapLocation> closedList = new ArrayList<>();
+		//Store the locations of blocked resouces if blocked then will mark that position as true by using 2*2 matrix array
 		boolean[][] resource = new boolean[xExtent][yExtent];
 		for (MapLocation mapLocation : resourceLocations) {
 			resource[mapLocation.x][mapLocation.y] = true;
@@ -138,6 +102,7 @@ public class AstarAgent {
 			openList.remove(listIndex);
 			closedList.add(currentNode);
 			if (currentNode.equals(goal)) {
+				// stores the final path to reach the enemy
 				Stack<MapLocation> finalPath = new Stack<>();
 				MapLocation node = null;
 				if (currentNode != null) {
@@ -208,6 +173,14 @@ public class AstarAgent {
 
 	}
 
+	/**
+	 * Checking if the node is valid or not based on the map size. (mainly will be helpful at the map borders to validate the node)
+	 * @param location
+	 * @param xExtent
+	 * @param yExtent
+	 * @param resource
+	 * @return
+	 */
 	private boolean isNodeValid(MapLocation location, int xExtent, int yExtent, boolean[][] resource) {
 		if ((location.x >= 0 && location.x < xExtent) && (location.y >= 0 && location.y < yExtent)) {
 			if (!resource[location.x][location.y]) {
@@ -217,6 +190,12 @@ public class AstarAgent {
 		return false;
 	}
 
+	/**
+	 * Return the optimal heuristic value between goal node to current
+	 * @param currentPos
+	 * @param goal
+	 * @return
+	 */
 	private float getHeuristic(MapLocation currentPos, MapLocation goal) {
 		if (currentPos != null && goal != null) {
 			return Math.abs(goal.x - currentPos.x) + Math.abs(goal.y - currentPos.y) - 2;
