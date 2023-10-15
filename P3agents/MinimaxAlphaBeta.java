@@ -105,31 +105,36 @@ public class MinimaxAlphaBeta extends Agent {
 
 
     private double getMinMaxValue (GameStateChild node, int depth, double alpha, double beta, boolean b){
+	// condition to retrun utility value , because if depth is zero means termminal node reached
         if (depth <= 0) {
             return node.state.getUtility();
         }
         double maxValue = Double.NEGATIVE_INFINITY;
         double minValue = Double.POSITIVE_INFINITY;
-        
         double value = 0;
-		for (GameStateChild child : orderChildrenWithHeuristics(node.state.getChildren())) {
-            if (b) {
-                maxValue = Math.max(maxValue, getMinMaxValue(child, depth - 1, alpha, beta, false));
-                if(maxValue >= beta){
-        			return maxValue;
-        		}
-        		alpha = Math.max(alpha, maxValue);
-                value = maxValue;
-            }
-            else {
-                minValue = Math.min(minValue, getMinMaxValue(child, depth - 1, alpha, beta, true));
-                if(minValue <= alpha){
-    				return minValue;
-    			}
-    			beta = Math.min(minValue, beta);
-                value = minValue;
-            }
-    	}
+	// loop for current nodes children
+	for (GameStateChild child : orderChildrenWithHeuristics(node.state.getChildren())) {
+	    if (b) {
+		//to maximize players trun
+		maxValue = Math.max(maxValue, getMinMaxValue(child, depth - 1, alpha, beta, false));
+		//prune if better alternative is there
+		if(maxValue >= beta){
+			return maxValue;
+		}
+		alpha = Math.max(alpha, maxValue);
+		value = maxValue;
+	    }
+	    else {
+		//to minimize players turn
+		minValue = Math.min(minValue, getMinMaxValue(child, depth - 1, alpha, beta, true));
+		//prune if better alternative is there
+		if(minValue <= alpha){
+			return minValue;
+		}
+		beta = Math.min(minValue, beta);
+		value = minValue;
+	    }
+	}
         return value;
 
     }
