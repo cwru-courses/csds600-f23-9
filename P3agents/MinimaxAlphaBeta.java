@@ -131,24 +131,10 @@ public class MinimaxAlphaBeta extends Agent {
      * @return The list of children sorted by your heuristic.
      */
     public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children) {
-    	List<GameStateChild> child = new ArrayList<>();
-    	children.stream().forEach(t->{
-    		child.add(t);
-    	});
-    	child.sort(new Comparator<GameStateChild>() {
-    		@Override
-    		public int compare(GameStateChild child1, GameStateChild child2) {
-	    	        if (child2.state.getUtility() < child1.state.getUtility()) {
-	    	    		return 1;
-	    	    	} 
-			else if (child1.state.getUtility() > child2.state.getUtility()) {
-	    	    		return -1;
-	    	    	}
-	    	        else {
-	    	    		return 0;
-	    	    	}
-    		}
-	});
-        return child;
+	//sorts input list of GameStateChild descending order of utility values from getUtility method.
+    	// This heuristic choose because highest utility values means more states. 
+    	// by sorting descending highest states will appear at starting of list.
+    	children.sort((child1, child2) -> Double.compare(child2.state.getUtility(), child1.state.getUtility()));
+        return children;
     }
 }
