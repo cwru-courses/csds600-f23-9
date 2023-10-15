@@ -174,7 +174,7 @@ public class AstarAgent {
 	}
 
 	/**
-	 * Checking if the node is valid or not based on the map size. (mainly will be helpful at the map borders to validate the node)
+	 * Checking if the node is valid or not, will determine if the node is a blocked resource or not
 	 * @param location
 	 * @param xExtent
 	 * @param yExtent
