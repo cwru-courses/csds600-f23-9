@@ -12,6 +12,11 @@ public class AstarAgent {
 		this.yExtent = yExtent;
 	}
 
+	/**
+	 * pojo class used to hold the footman's xPos, yPos, heuristic cost, total cost ( fCost= gCost+hCost)
+	 * @author
+	 *
+	 */
 	class MapLocation {
 		public int x, y;
 		public MapLocation parent;
