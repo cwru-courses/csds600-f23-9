@@ -2,6 +2,11 @@ package edu.cwru.sepia.agent.minimax;
 
 import edu.cwru.sepia.environment.model.state.*;
 
+/**
+ * Pojo class to store the players data like HP, xPos, yPos, and damageIncured by the Player
+ * @author 
+ *
+ */
 public class PlayerData {
 	public int id, playerHp, xPosition, yPosition, playerDamage;
 
