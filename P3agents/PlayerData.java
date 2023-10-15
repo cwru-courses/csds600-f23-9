@@ -3,7 +3,11 @@ package edu.cwru.sepia.agent.minimax;
 import edu.cwru.sepia.environment.model.state.*;
 
 public class PlayerData {
-	public int playerHp, xPosition, yPosition,playerDamage, id;
+	public int id;
+    	public int playerHp;
+   	public int xPosition;
+    	public int yPosition;
+    	public int playerDamage;
 
 	public PlayerData(Unit.UnitView unitView) {
 		this.playerHp = unitView.getHP();
