@@ -73,14 +73,32 @@ public class MinimaxAlphaBeta extends Agent {
      * @return The best child of this node with updated values
      */
     public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta) {
-        double getValue = getMinMaxValue(node, depth, alpha, beta, true);
-        List<GameStateChild> childrens = node.state.getChildren();
-        for (GameStateChild children : childrens) {
-            if (children.state.getUtility() == getValue) {
-                return children;
-            }
-        }
-        return childrens.get(0);
+        // Initialize the best value as negative infinity
+    	    double bestValue = Double.NEGATIVE_INFINITY;
+    	    // Initialize the best child as null.
+    	 	GameStateChild bestChild = null;
+
+    	    for (GameStateChild child : node.state.getChildren()) {
+    	    	//to call the MinMax method
+    	        double value = getMinMaxValue(child, depth, alpha, beta, true); 
+
+    	        if (value > bestValue) {
+    	        	//update the best value when more better one is available
+    	            bestValue = value;  
+    	           // Updating the best child node.
+    	            bestChild = child;  
+    	        }
+                // updating the best value found till now for alpha
+    	        alpha = Math.max(alpha, bestValue);  // Update alpha with the best value found so far.
+
+    	        // checking beta <= alpha to prune 
+    	        if (beta <= alpha) {
+    	        	//remaining children we can prune because they won't affect output
+    	            break;
+    	        }
+    	    }
+    	    //return the bestChild
+    	    return bestChild;
     }
 
 
