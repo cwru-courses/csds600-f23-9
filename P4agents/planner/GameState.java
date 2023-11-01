@@ -6,6 +6,7 @@ import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.environment.model.state.ResourceType;
 import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.Unit.UnitView;
+import edu.cwru.sepia.util.Direction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,9 +50,9 @@ public class GameState implements Comparable<GameState> {
 
 	public List<ResourceView> resourceNodes;
 	public boolean[][] map;
-	public int[][] goldMap, woodMap;
+	public int[][] goldMapArray, woodmapArray;
 
-	public List<UnitView> allUnits;
+	public List<UnitView> units;
 	public List<UnitView> playerUnits = new ArrayList<>();
 	public UnitView townHall;
 
@@ -80,11 +81,12 @@ public class GameState implements Comparable<GameState> {
 		this.buildPeasants = buildPeasants;
 		this.cost = getCost();
 		this.parent = null;
+		heuristic();
 		
 		this.xExtent = state.getXExtent();// Get xExtent Map Size
 		this.yExtent = state.getYExtent();// Get yExtent Map Size
-		this.allUnits = state.getAllUnits();// Get list of all units
-		for (UnitView unitView : allUnits) {
+		this.units = state.getAllUnits();// Get list of all units
+		for (UnitView unitView : units) {
 			if (unitView.getTemplateView().getPlayer() == playerNum) {
 				if (unitView.getTemplateView().getName().equalsIgnoreCase("townhall")) {
 					this.townHall = unitView;
@@ -95,13 +97,13 @@ public class GameState implements Comparable<GameState> {
 		}
 
 		this.map = new boolean[xExtent][yExtent]; 
-		this.goldMap = new int[xExtent][yExtent]; // for gold resource location in map
-		this.woodMap = new int[xExtent][yExtent]; // for wood resource location in map
+		this.goldMapArray = new int[xExtent][yExtent]; // for gold resource location in map
+		this.woodmapArray = new int[xExtent][yExtent]; // for wood resource location in map
 		for (int x = 0; x < xExtent; x++) {
 			for (int y = 0; y < yExtent; y++) {
 				map[x][y] = false;
-				woodMap[x][y] = 0;
-				goldMap[x][y] = 0;
+				woodmapArray[x][y] = 0;
+				goldMapArray[x][y] = 0;
 			}
 		}
 		map[townHall.getXPosition()][townHall.getYPosition()] = true; // mark town hall position as true in the map
@@ -110,13 +112,13 @@ public class GameState implements Comparable<GameState> {
 		for (ResourceView resourceView : resourceNodes) {
 			map[resourceView.getXPosition()][resourceView.getYPosition()] = true;// Marks all the resource locations as true in the map.
 			if (resourceView.getType() == ResourceNode.Type.TREE) {
-				woodMap[resourceView.getXPosition()][resourceView.getYPosition()] = resourceView.getAmountRemaining();
+				woodmapArray[resourceView.getXPosition()][resourceView.getYPosition()] = resourceView.getAmountRemaining();
 			}else if (resourceView.getType() == ResourceNode.Type.GOLD_MINE) {
-				goldMap[resourceView.getXPosition()][resourceView.getYPosition()] = resourceView.getAmountRemaining();
+				goldMapArray[resourceView.getXPosition()][resourceView.getYPosition()] = resourceView.getAmountRemaining();
 			}
 		}
 
-		heuristic();
+		
     }
 
     /**
@@ -151,9 +153,106 @@ public class GameState implements Comparable<GameState> {
      * @return The value estimated remaining cost to reach a goal state from this state.
      */
     public double heuristic() {
-        // TODO: Implement me!
-        return 0.0;
+    	UnitView peasant = playerUnits.get(0); // Get the available peasant
+		Position unitPosition = new Position(peasant.getXPosition(), peasant.getYPosition()); // creating a position const using peasant x,y pos
+
+    	int goldDiffernence = requiredGold - currentGold;
+    	int woodDifference = requiredWood - currentWood;
+        double value = goldDiffernence + woodDifference;
+
+    	if (peasant.getCargoAmount() > 0) {
+    		Position position = new Position(townHall.getXPosition(), townHall.getYPosition());// Creating a position const using townHall x,Y Pos
+    		double distance =position.chebyshevDistance(unitPosition);
+			value = value - peasant.getCargoAmount() * 0.5;
+			value = value + distance;
+    	}
+    	else {
+    		Position pos1 = getBestPosOfResource(unitPosition, goldDiffernence, woodDifference);
+			value = value + pos1.chebyshevDistance(unitPosition) * 0.5;
+    		double harvestAmount = 0;
+    		for(Direction direction : Direction.values()) {
+    			int yPos = peasant.getYPosition() + direction.yComponent();
+    			int xPos = peasant.getXPosition() + direction.xComponent();
+    			int woodAvailable = woodmapArray[xPos][yPos];
+    			int goldAvailable = goldMapArray[xPos][yPos];
+    			
+    			if (goldAvailable > 0) {
+    				if (goldDiffernence > 0) {
+    					if (goldAvailable > 100) {
+    						harvestAmount = 100;
+    					}
+    					else {
+    						harvestAmount = goldMapArray[xPos][yPos];
+    					}
+    				}
+    			}
+    			if (woodAvailable > 0) {
+    				if (woodDifference > 0) {
+    					if (woodAvailable > 100) {
+    						harvestAmount = 100;
+    					}
+    					else {
+    						harvestAmount = woodmapArray[xPos][yPos];
+    					}
+    				}
+    			}
+    		}
+			value = value - harvestAmount * 0.3;
+    	}
+
+        return value;
     }
+    
+	private Position getBestPosOfResource(Position currentPosition, int goldDiff, int woodDiff) {
+		Position best = null;
+		int resource = 0;
+		int dist = 0;
+		int requiredAmount,currentAmount;
+		int[][] map;
+		if(goldDiff < woodDiff) {
+			requiredAmount = requiredGold;
+			currentAmount = currentGold;
+			map = goldMapArray;
+		}
+		else {
+			requiredAmount = requiredWood;
+			currentAmount = currentWood;
+			map = woodmapArray;
+		}
+
+		for(int i = 0; i < map.length; i ++) {// Iterating the map to find the nearest position of resource
+			for(int j = 0; j < map[i].length; j ++) {
+				int currentBest = map[i][j];
+				if(currentBest > 0) {
+					int distance = currentPosition.chebyshevDistance(new Position(i, j));;
+					if(best == null) {
+						best = new Position(i, j);
+						dist = distance;
+						resource = currentBest;
+					}
+					else {
+						if(distance <= dist) {
+							if(currentBest >= resource || currentBest >= requiredAmount - currentAmount) {
+								best = new Position(i, j);
+								dist = distance;
+								resource = currentBest;
+							}
+						}
+						else {
+							if(resource >= 100) {
+								if(currentBest >= resource && currentBest >= 100 && resource < requiredAmount - currentAmount) {
+									best = new Position(i, j);
+									dist = distance;
+									resource = currentBest;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return best;
+	}
 
     /**
      *
