@@ -10,6 +10,7 @@ import edu.cwru.sepia.util.Direction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class is used to represent the state of the game after applying one of the avaiable actions. It will also
@@ -129,8 +130,7 @@ public class GameState implements Comparable<GameState> {
      * @return true if the goal conditions are met in this instance of game state.
      */
     public boolean isGoal() {
-        // TODO: Implement me!
-        return false;
+    	return (this.currentWood >= this.requiredWood && this.currentGold >= this.requiredGold);
     }
 
     /**
@@ -262,8 +262,7 @@ public class GameState implements Comparable<GameState> {
      * @return The current cost to reach this goal
      */
     public double getCost() {
-        // TODO: Implement me!
-        return 0.0;
+        return this.cost;
     }
 
     /**
@@ -276,7 +275,10 @@ public class GameState implements Comparable<GameState> {
     @Override
     public int compareTo(GameState o) {
         // TODO: Implement me!
-        return 0;
+    	double cost1 = o.heuristic() + o.getCost();
+    	double cost2 = this.heuristic()+ this.getCost();
+    	double returnValue= cost2-cost1;
+    	return (int) returnValue;
     }
 
     /**
@@ -287,7 +289,13 @@ public class GameState implements Comparable<GameState> {
      */
     @Override
     public boolean equals(Object o) {
-        // TODO: Implement me!
+    	if(o instanceof GameState) {
+    		GameState gState = (GameState) o;
+    		if(gState.currentGold==this.currentGold 
+    				&& gState.currentWood== this.currentWood && gState.units==this.units) {
+    			return true;
+    		}
+    	}
         return false;
     }
 
@@ -298,8 +306,7 @@ public class GameState implements Comparable<GameState> {
      * @return An integer hashcode that is equal for equal states.
      */
     @Override
-    public int hashCode() {
-        // TODO: Implement me!
-        return 0;
-    }
+	public int hashCode() {
+		return Objects.hash(currentGold, currentWood, units);
+	}
 }
