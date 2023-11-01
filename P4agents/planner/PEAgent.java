@@ -85,8 +85,28 @@ public class PEAgent extends Agent {
      */
     @Override
     public Map<Integer, Action> middleStep(State.StateView stateView, History.HistoryView historyView) {
-        // TODO: Implement me!
-        return null;
+        Map<Integer, Action> actions = new HashMap<>();
+
+        // If the plan is empty, means we executed all action no need to anything
+        if (plan.isEmpty()) {
+            return actions;
+        }
+
+        StripsAction nextAction = plan.peek();
+
+        // To check weather pre-conditions are met or not
+        if (nextAction.preconditionsMet(new GameState(stateView, playernum, 0, 0, false))) {
+            // After pre-conditions met we can execute
+            Action sepiAction = createSepiaAction(nextAction);
+            actions.put(peasantIdMap.get(nextAction.getUnitID()), sepiAction);
+
+           // to remove executed action from list 
+            plan.pop();
+        } else {
+            // If preconditions are not met, wait and do nothing for now
+        }
+
+        return actions;
     }
 
     /**
