@@ -5,7 +5,10 @@ import edu.cwru.sepia.environment.model.state.ResourceNode;
 import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.environment.model.state.ResourceType;
 import edu.cwru.sepia.environment.model.state.State;
+import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.environment.model.state.Unit.UnitView;
+import edu.cwru.sepia.environment.model.state.UnitTemplate;
+import edu.cwru.sepia.agent.planner.actions.StripsActionImpl;
 import edu.cwru.sepia.util.Direction;
 
 import java.util.ArrayList;
@@ -82,7 +85,6 @@ public class GameState implements Comparable<GameState> {
 		this.buildPeasants = buildPeasants;
 		this.cost = getCost();
 		this.parent = null;
-		heuristic();
 		
 		this.xExtent = state.getXExtent();// Get xExtent Map Size
 		this.yExtent = state.getYExtent();// Get yExtent Map Size
@@ -118,9 +120,92 @@ public class GameState implements Comparable<GameState> {
 				goldMapArray[resourceView.getXPosition()][resourceView.getYPosition()] = resourceView.getAmountRemaining();
 			}
 		}
-
+		heuristic();
 		
     }
+    
+    public UnitView getUnit(int unitId, List<UnitView> units) {
+        for (UnitView u : units) {
+            if (u.getID() == unitId) {
+                return u;
+            }
+        }
+        return null;
+    }
+    
+    public ResourceView getResource(int x, int y, List<ResourceView> resources) {
+        for (ResourceView r : resources) {
+            if (r.getXPosition() == x && r.getYPosition() == y) {
+                return r;
+            }
+        }
+        return null;
+    }
+    
+	public GameState(GameState state) {
+		this.state = state.state;
+		this.playerNum = state.playerNum;
+        this.xExtent = state.xExtent;
+		this.yExtent = state.yExtent;
+        this.buildPeasants = state.buildPeasants;
+		this.parent = state;
+		this.requiredWood = state.requiredWood;
+		this.currentGold = state.currentGold;
+		this.currentWood = state.currentWood;
+		this.requiredGold = state.requiredGold;
+		this.townHall = state.townHall;
+		this.map = returnMap(state.map);
+		this.goldMapArray = returnMap(state.goldMapArray);
+		this.woodmapArray = returnMap(state.woodmapArray);
+		this.units = setUnits(state.units);
+		this.playerUnits = setUnits(state.playerUnits);
+		List<ResourceView> resource1 = new ArrayList<>();
+		state.resourceNodes.stream().forEach(view1 -> {
+			resource1.add(new ResourceView(new ResourceNode(view1.getType(), view1.getXPosition(),view1.getYPosition(), view1.getAmountRemaining(), view1.getID())));
+		});
+		this.resourceNodes = resource1;
+
+		this.cost = getCost();
+		List<StripsAction> stripActionsList = new ArrayList<StripsAction>();
+		for (StripsAction element : state.plan) {
+			stripActionsList.add(element);
+		}
+		this.plan = stripActionsList;
+		heuristic();
+	}
+	
+	private int[][] returnMap(int[][] intArray){
+		int[][] array = new int[intArray.length][intArray[0].length];
+		for (int i = 0; i < intArray.length; i++) {
+			for (int j = 0; j <intArray[0].length; j++) {
+				array[i][j] = intArray[i][j];
+			}
+		}
+		return array;
+	}
+	
+	private boolean[][] returnMap(boolean[][] intArray){
+		boolean[][] array = new boolean[intArray.length][intArray[0].length];
+		for (int i = 0; i < intArray.length; i++) {
+			for (int j = 0; j <intArray[0].length; j++) {
+				array[i][j] = intArray[i][j];
+			}
+		}
+		return array;
+	}
+	
+	private List<UnitView> setUnits(List<UnitView> unitss) {
+		List<UnitView> units = new ArrayList<>();
+		for (UnitView uv : unitss) {
+			Unit unit = new Unit(new UnitTemplate(uv.getID()), uv.getID());
+			unit.setxPosition(uv.getXPosition());
+			unit.setyPosition(uv.getYPosition());
+            unit.setCargo(uv.getCargoType(), uv.getCargoAmount());
+			units.add(new UnitView(unit));
+		}
+		return units;
+		
+	}
 
     /**
      * Unlike in the first A* assignment there are many possible goal states. As long as the wood and gold requirements
@@ -140,10 +225,91 @@ public class GameState implements Comparable<GameState> {
      * @return A list of the possible successor states and their associated actions
      */
     public List<GameState> generateChildren() {
-        // TODO: Implement me!
-        return null;
-    }
+		List<GameState> returnList = new ArrayList<>();
+		for (UnitView unitView : playerUnits) {
+			for (Direction d : Direction.values()) {
 
+				int xPos = unitView.getXPosition() + d.xComponent();
+				int yPos = unitView.getYPosition() + d.yComponent();
+				Position pos1 = new Position(xPos, yPos);
+
+				Position pos2 = new Position(townHall.getXPosition(), townHall.getYPosition());
+
+				StripsAction depositGold = new StripsActionImpl(unitView, pos1, pos2, this, true);
+				if (depositGold.preconditionsMet(this)) {
+					returnList.add(depositGold.apply(this));
+				}
+
+				StripsAction depositWood = new StripsActionImpl(unitView, pos1, pos2, this, false);
+				if (depositWood.preconditionsMet(this)) {
+					returnList.add(depositWood.apply(this));
+				}
+
+				StripsAction harvestGold = new StripsActionImpl(unitView, pos1, null, this, true);
+				if (harvestGold.preconditionsMet(this)) {
+					returnList.add(harvestGold.apply(this));
+				}
+
+				StripsAction harvestWood = new StripsActionImpl(unitView, pos1, null, this, false);
+				if (harvestWood.preconditionsMet(this)) {
+					returnList.add(harvestWood.apply(this));
+				}
+			}
+			Position goldPos = getResouceBestPos(new Position(unitView.getXPosition(), unitView.getYPosition()),requiredGold,currentGold,goldMapArray);
+			bestMove(returnList, unitView, goldPos);
+
+			Position woodPos = getResouceBestPos(new Position(unitView.getXPosition(), unitView.getYPosition()),requiredWood, currentWood, woodmapArray);
+			bestMove(returnList, unitView, woodPos);
+
+			Position th = new Position(townHall.getXPosition(), townHall.getYPosition());
+			bestMove(returnList, unitView, th);
+		}
+
+		return returnList;
+    }
+    
+	public Position getResouceBestPos(Position currentPosition, int requiredAmt, int currentAmt, int[][] mapArray) {
+		Position result = null;
+		int resource = 0;
+		int dist = 0;
+		int [][] map = woodmapArray;
+		for(int i = 0; i < map.length; i ++) {
+			for(int j = 0; j < map[i].length; j ++) {
+				int currentBest = map[i][j];
+				if(currentBest > 0) {
+					int distance = currentPosition.chebyshevDistance(new Position(i, j));
+					if(result == null) {
+						result = new Position(i, j);
+						dist = distance;
+						resource = currentBest;
+					}
+					else {
+						if(distance <= dist) {
+							if(currentBest >= resource || currentBest >= requiredAmt - currentAmt) {
+								result = new Position(i, j);
+								dist = distance;
+								resource = currentBest;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
+	private void bestMove(List<GameState> children, UnitView unit, Position position) {
+		for (Direction d : Direction.values()) {
+			int x = position.x + d.xComponent();
+			int y = position.y + d.yComponent();
+			StripsAction move = new StripsActionImpl(unit, new Position(x, y), null, this,null);
+			if (move.preconditionsMet(this)) {
+				children.add(move.apply(this));
+			}
+		}
+	}
+    
     /**
      * Write your heuristic function here. Remember this must be admissible for the properties of A* to hold. If you
      * can come up with an easy way of computing a consistent heuristic that is even better, but not strictly necessary.
