@@ -1,5 +1,6 @@
 package edu.cwru.sepia.agent.planner.actions;
 
+import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.agent.planner.GameState;
 
 /**
@@ -37,4 +38,6 @@ public interface StripsAction {
      * @return State resulting from successful action appliction.
      */
     public GameState apply(GameState state);
+
+	Action createActionSEPIA();
 }
