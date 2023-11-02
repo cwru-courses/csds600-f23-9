@@ -1,6 +1,11 @@
 package edu.cwru.sepia.agent.planner;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 import edu.cwru.sepia.agent.planner.actions.StripsAction;
+import edu.cwru.sepia.agent.planner.actions.StripsActionImpl;
 import edu.cwru.sepia.environment.model.state.ResourceNode;
 import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.environment.model.state.ResourceType;
@@ -8,46 +13,30 @@ import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.environment.model.state.Unit.UnitView;
 import edu.cwru.sepia.environment.model.state.UnitTemplate;
-import edu.cwru.sepia.agent.planner.actions.StripsActionImpl;
 import edu.cwru.sepia.util.Direction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 /**
- * This class is used to represent the state of the game after applying one of the avaiable actions. It will also
- * track the A* specific information such as the parent pointer and the cost and heuristic function. Remember that
- * unlike the path planning A* from the first assignment the cost of an action may be more than 1. Specifically the cost
- * of executing a compound action such as move can be more than 1. You will need to account for this in your heuristic
+ * This class is used to represent the state of the game after applying one of
+ * the available actions. It will also track the A* specific information such as
+ * the parent pointer and the cost and heuristic function. Remember that unlike
+ * the path planning A* from the first assignment the cost of an action may be
+ * more than 1. Specifically the cost of executing a compound action such as
+ * move can be more than 1. You will need to account for this in your heuristic
  * and your cost function.
  *
- * The first instance is constructed from the StateView object (like in PA2). Implement the methods provided and
- * add any other methods and member variables you need.
+ * The first instance is constructed from the StateView object (like in PA2).
+ * Implement the methods provided and add any other methods and member variables
+ * you need.
  *
  * Some useful API calls for the state view are
  *
  * state.getXExtent() and state.getYExtent() to get the map size
  *
-  * Note that SEPIA saves the townhall as a unit. Therefore when you create a GameState instance,
- * you must be able to distinguish the townhall from a peasant. This can be done by getting
- * the name of the unit type from that unit's TemplateView:
- * state.getUnit(id).getTemplateView().getName().toLowerCase(): returns "townhall" or "peasant"
- * 
- * You will also need to distinguish between gold mines and trees.
- * state.getResourceNode(id).getType(): returns the type of the given resource
- * 
- * You can compare these types to values in the ResourceNode.Type enum:
- * ResourceNode.Type.GOLD_MINE and ResourceNode.Type.TREE
- * 
- * You can check how much of a resource is remaining with the following:
- * state.getResourceNode(id).getAmountRemaining()
- *
- * I recommend storing the actions that generated the instance of the GameState in this class using whatever
- * class/structure you use to represent actions.
+ * I recommend storing the actions that generated the instance of the GameState
+ * in this class using whatever class/structure you use to represent actions.
  */
 public class GameState implements Comparable<GameState> {
-	
+
 	State.StateView state;
 	public int playerNum,requiredGold, requiredWood, currentGold, currentWood,xExtent, yExtent;
 	public boolean buildPeasants;
@@ -56,25 +45,32 @@ public class GameState implements Comparable<GameState> {
 	public boolean[][] map;
 	public int[][] goldMapArray, woodmapArray;
 
-	public List<UnitView> units;
+	public List<UnitView> units= new ArrayList<>();
 	public List<UnitView> playerUnits = new ArrayList<>();
 	public UnitView townHall;
 
 	public double cost;
 	public List<StripsAction> plan;
 	public GameState parent;
+	private double heuristic;
 
-    /**
-     * Construct a GameState from a stateview object. This is used to construct the initial search node. All other
-     * nodes should be constructed from the another constructor you create or by factory functions that you create.
-     *
-     * @param state The current stateview at the time the plan is being created
-     * @param playernum The player number of agent that is planning
-     * @param requiredGold The goal amount of gold (e.g. 200 for the small scenario)
-     * @param requiredWood The goal amount of wood (e.g. 200 for the small scenario)
-     * @param buildPeasants True if the BuildPeasant action should be considered
-     */
-    public GameState(State.StateView state, int playernum, int requiredGold, int requiredWood, boolean buildPeasants) {
+	/**
+	 * Construct a GameState from a stateview object. This is used to construct the
+	 * initial search node. All other nodes should be constructed from the another
+	 * constructor you create or by factory functions that you create.
+	 *
+	 * @param state
+	 *            The current stateview at the time the plan is being created
+	 * @param playernum
+	 *            The player number of agent that is planning
+	 * @param requiredGold
+	 *            The goal amount of gold (e.g. 200 for the small scenario)
+	 * @param requiredWood
+	 *            The goal amount of wood (e.g. 200 for the small scenario)
+	 * @param buildPeasants
+	 *            True if the BuildPeasant action should be considered
+	 */
+	public GameState(State.StateView state, int playernum, int requiredGold, int requiredWood, boolean buildPeasants) {
     	this.state=state;
 		this.playerNum = playernum;
 		this.requiredGold = requiredGold;// Set req Gold
@@ -120,28 +116,10 @@ public class GameState implements Comparable<GameState> {
 				goldMapArray[resourceView.getXPosition()][resourceView.getYPosition()] = resourceView.getAmountRemaining();
 			}
 		}
-		heuristic();
+		this.heuristic = heuristic();
 		
     }
-    
-    public UnitView getUnit(int unitId, List<UnitView> units) {
-        for (UnitView u : units) {
-            if (u.getID() == unitId) {
-                return u;
-            }
-        }
-        return null;
-    }
-    
-    public ResourceView getResource(int x, int y, List<ResourceView> resources) {
-        for (ResourceView r : resources) {
-            if (r.getXPosition() == x && r.getYPosition() == y) {
-                return r;
-            }
-        }
-        return null;
-    }
-    
+
 	public GameState(GameState state) {
 		this.state = state.state;
 		this.playerNum = state.playerNum;
@@ -171,7 +149,20 @@ public class GameState implements Comparable<GameState> {
 			stripActionsList.add(element);
 		}
 		this.plan = stripActionsList;
-		heuristic();
+		this.heuristic=heuristic();
+	}
+	
+	private List<UnitView> setUnits(List<UnitView> unitss) {
+		List<UnitView> units = new ArrayList<>();
+		for (UnitView uv : unitss) {
+			Unit unit = new Unit(new UnitTemplate(uv.getID()), uv.getID());
+			unit.setxPosition(uv.getXPosition());
+			unit.setyPosition(uv.getYPosition());
+            unit.setCargo(uv.getCargoType(), uv.getCargoAmount());
+			units.add(new UnitView(unit));
+		}
+		return units;
+		
 	}
 	
 	private int[][] returnMap(int[][] intArray){
@@ -193,101 +184,128 @@ public class GameState implements Comparable<GameState> {
 		}
 		return array;
 	}
-	
-	private List<UnitView> setUnits(List<UnitView> unitss) {
-		List<UnitView> units = new ArrayList<>();
-		for (UnitView uv : unitss) {
-			Unit unit = new Unit(new UnitTemplate(uv.getID()), uv.getID());
-			unit.setxPosition(uv.getXPosition());
-			unit.setyPosition(uv.getYPosition());
-            unit.setCargo(uv.getCargoType(), uv.getCargoAmount());
-			units.add(new UnitView(unit));
-		}
-		return units;
-		
-	}
 
-    /**
-     * Unlike in the first A* assignment there are many possible goal states. As long as the wood and gold requirements
-     * are met the peasants can be at any location and the capacities of the resource locations can be anything. Use
-     * this function to check if the goal conditions are met and return true if they are.
-     *
-     * @return true if the goal conditions are met in this instance of game state.
-     */
+	/**
+	 * Unlike in the first A* assignment there are many possible goal states. As
+	 * long as the wood and gold requirements are met the peasants can be at any
+	 * location and the capacities of the resource locations can be anything. Use
+	 * this function to check if the goal conditions are met and return true if they
+	 * are.
+	 *
+	 * @return true if the goal conditions are met in this instance of game state.
+	 */
     public boolean isGoal() {
     	return (this.currentWood >= this.requiredWood && this.currentGold >= this.requiredGold);
     }
 
-    /**
-     * The branching factor of this search graph are much higher than the planning. Generate all of the possible
-     * successor states and their associated actions in this method.
-     *
-     * @return A list of the possible successor states and their associated actions
-     */
-    public List<GameState> generateChildren() {
+
+	/**
+	 * The branching factor of this search graph are much higher than the planning.
+	 * Generate all of the possible successor states and their associated actions in
+	 * this method.
+	 *
+	 * @return A list of the possible successor states and their associated actions
+	 */
+	public List<GameState> generateChildren() {
 		List<GameState> returnList = new ArrayList<>();
 		for (UnitView unitView : playerUnits) {
-			for (Direction d : Direction.values()) {
+			for (Direction direction : Direction.values()) {
 
-				int xPos = unitView.getXPosition() + d.xComponent();
-				int yPos = unitView.getYPosition() + d.yComponent();
+				int xPos = unitView.getXPosition() + direction.xComponent();
+				int yPos = unitView.getYPosition() + direction.yComponent();
 				Position pos1 = new Position(xPos, yPos);
-
 				Position pos2 = new Position(townHall.getXPosition(), townHall.getYPosition());
-
-				StripsAction depositGold = new StripsActionImpl(unitView, pos1, pos2, this, true);
-				if (depositGold.preconditionsMet(this)) {
-					returnList.add(depositGold.apply(this));
+				
+				StripsActionImpl goldHarvest = new StripsActionImpl(unitView, pos1,null, this,true);
+				if (goldHarvest.preconditionsMet(this)) {
+					returnList.add(goldHarvest.apply(this));
 				}
-
-				StripsAction depositWood = new StripsActionImpl(unitView, pos1, pos2, this, false);
-				if (depositWood.preconditionsMet(this)) {
-					returnList.add(depositWood.apply(this));
+				StripsActionImpl goldDeposit = new StripsActionImpl(unitView, pos1, pos2, this,true);
+				if (goldDeposit.preconditionsMet(this)) {
+					returnList.add(goldDeposit.apply(this));
 				}
-
-				StripsAction harvestGold = new StripsActionImpl(unitView, pos1, null, this, true);
-				if (harvestGold.preconditionsMet(this)) {
-					returnList.add(harvestGold.apply(this));
+				StripsActionImpl woodHarvest = new StripsActionImpl(unitView, pos1,null, this,false);
+				if (woodHarvest.preconditionsMet(this)) {
+					returnList.add(woodHarvest.apply(this));
 				}
-
-				StripsAction harvestWood = new StripsActionImpl(unitView, pos1, null, this, false);
-				if (harvestWood.preconditionsMet(this)) {
-					returnList.add(harvestWood.apply(this));
+				StripsActionImpl woodDeposit = new StripsActionImpl(unitView, pos1, pos2, this,false);
+				if (woodDeposit.preconditionsMet(this)) {
+					returnList.add(woodDeposit.apply(this));
 				}
 			}
-			Position goldPos = getResouceBestPos(new Position(unitView.getXPosition(), unitView.getYPosition()),requiredGold,currentGold,goldMapArray);
-			bestMove(returnList, unitView, goldPos);
 
-			Position woodPos = getResouceBestPos(new Position(unitView.getXPosition(), unitView.getYPosition()),requiredWood, currentWood, woodmapArray);
-			bestMove(returnList, unitView, woodPos);
+			Position goldMine = findBestResource(new Position(unitView.getXPosition(), unitView.getYPosition()), ResourceNode.Type.GOLD_MINE);
+			getToResource(returnList,unitView,goldMine);
+			Position tree = findBestResource(new Position(unitView.getXPosition(), unitView.getYPosition()), ResourceNode.Type.TREE);
+			getToResource(returnList,unitView,tree);
 
-			Position th = new Position(townHall.getXPosition(), townHall.getYPosition());
-			bestMove(returnList, unitView, th);
+			for (Direction dir : Direction.values()) { // get to townHall
+				int newX = townHall.getXPosition() + dir.xComponent();
+				int newY = townHall.getYPosition() + dir.yComponent();
+				StripsActionImpl actionStrip = new StripsActionImpl(unitView, new Position(newX, newY), null,this,null);
+				if (actionStrip.preconditionsMet(this)) {
+					returnList.add(actionStrip.apply(this));
+				}
+			}
+
 		}
-
 		return returnList;
-    }
-    
-	public Position getResouceBestPos(Position currentPosition, int requiredAmt, int currentAmt, int[][] mapArray) {
-		Position result = null;
+	}
+	
+	private void getToResource(List<GameState> returnList, UnitView unitView, Position pos) {
+		for (Direction dir : Direction.values()) { // get to townHall
+			int newX = pos.x + dir.xComponent();
+			int newY = pos.y + dir.yComponent();
+			StripsActionImpl actionStrip = new StripsActionImpl(unitView, new Position(newX, newY), null,this,null);
+			if (actionStrip.preconditionsMet(this)) {
+				returnList.add(actionStrip.apply(this));
+				continue;
+			}
+		}
+	}
+	
+	
+	/**
+	 * given a position and the resource we are trying to get, this determines the position of the best resourceNode to go to
+	 * @param currentPosition
+	 * @param type the resource we are trying to get
+	 * @return the best resourceNode to go to
+	 */
+	public Position findBestResource(Position currentPosition, ResourceNode.Type type) {
+		Position best = null;
 		int resource = 0;
 		int dist = 0;
-		int [][] map = woodmapArray;
-		for(int i = 0; i < map.length; i ++) {
+		int requiredAmount,currentAmount;
+		int[][] map;
+		if(type == ResourceNode.Type.GOLD_MINE) {
+			requiredAmount = requiredGold;
+			currentAmount = currentGold;
+			map = goldMapArray;
+		}
+		else {
+			requiredAmount = requiredWood;
+			currentAmount = currentWood;
+			map = woodmapArray;
+		}
+		
+		for(int i = 0; i < map.length; i ++) {// Iterating the map to find the nearest position of resource
 			for(int j = 0; j < map[i].length; j ++) {
 				int currentBest = map[i][j];
 				if(currentBest > 0) {
-					int distance = currentPosition.chebyshevDistance(new Position(i, j));
-					if(result == null) {
-						result = new Position(i, j);
+					int distance = currentPosition.chebyshevDistance(new Position(i, j));;
+					if(best == null) {
 						dist = distance;
+						best = new Position(i, j);
 						resource = currentBest;
-					}
-					else {
-						if(distance <= dist) {
-							if(currentBest >= resource || currentBest >= requiredAmt - currentAmt) {
-								result = new Position(i, j);
+					} else {
+						if(distance <= dist && currentBest >= resource || currentBest >= requiredAmount - currentAmount) {
+							dist = distance;
+							best = new Position(i, j);
+							resource = currentBest;
+						}else {
+							if(resource >= 100 && currentBest >= resource && currentBest >= 100 && resource < requiredAmount - currentAmount) {
 								dist = distance;
+								best = new Position(i, j);
 								resource = currentBest;
 							}
 						}
@@ -295,30 +313,51 @@ public class GameState implements Comparable<GameState> {
 				}
 			}
 		}
-
-		return result;
+		return best;
 	}
 
-	private void bestMove(List<GameState> children, UnitView unit, Position position) {
-		for (Direction d : Direction.values()) {
-			int x = position.x + d.xComponent();
-			int y = position.y + d.yComponent();
-			StripsAction move = new StripsActionImpl(unit, new Position(x, y), null, this,null);
-			if (move.preconditionsMet(this)) {
-				children.add(move.apply(this));
+	/**
+	 * finds a unitView from a list of unitVIews by ID
+	 * @param unitId the ID that we are looking for
+	 * @param units the list of units to search
+	 * @return the desired unit or null if that unitId doesn't exit
+	 */
+	public UnitView getUnit(int unitId, List<UnitView> units) {
+		for (UnitView unit : units) {
+			if (unit.getID() == unitId) {
+				return unit;
 			}
 		}
+		return null;
 	}
-    
-    /**
-     * Write your heuristic function here. Remember this must be admissible for the properties of A* to hold. If you
-     * can come up with an easy way of computing a consistent heuristic that is even better, but not strictly necessary.
-     *
-     * Add a description here in your submission explaining your heuristic.
-     *
-     * @return The value estimated remaining cost to reach a goal state from this state.
-     */
-    public double heuristic() {
+
+	/**
+	 * finds a resourceView from a list of resourceViews by position
+	 * @param x the x position of the desired resourceView
+	 * @param y the x position of the desired resourceView
+	 * @param resources the list of resourceViews
+	 * @return the desired resourceView or null if it doesn't exist
+	 */
+	public ResourceView getResource(int x, int y, List<ResourceView> resources) {
+		for (ResourceView resource : resources) {
+			if (resource.getXPosition() == x && resource.getYPosition() == y) {
+				return resource;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Write your heuristic function here. Remember this must be admissible for the
+	 * properties of A* to hold. If you can come up with an easy way of computing a
+	 * consistent heuristic that is even better, but not strictly necessary.
+	 *
+	 * Add a description here in your submission explaining your heuristic.
+	 *
+	 * @return The value estimated remaining cost to reach a goal state from this
+	 *         state.
+	 */
+	public double heuristic() {
     	UnitView peasant = playerUnits.get(0); // Get the available peasant
 		Position unitPosition = new Position(peasant.getXPosition(), peasant.getYPosition()); // creating a position const using peasant x,y pos
 
@@ -368,7 +407,7 @@ public class GameState implements Comparable<GameState> {
 
         return value;
     }
-    
+	
 	private Position getBestPosOfResource(Position currentPosition, int goldDiff, int woodDiff) {
 		Position best = null;
 		int resource = 0;
@@ -420,25 +459,28 @@ public class GameState implements Comparable<GameState> {
 		return best;
 	}
 
-    /**
-     *
-     * Write the function that computes the current cost to get to this node. This is combined with your heuristic to
-     * determine which actions/states are better to explore.
-     *
-     * @return The current cost to reach this goal
-     */
-    public double getCost() {
-        return this.cost;
-    }
+	/**
+	 * Write the function that computes the current cost to get to this node. This
+	 * is combined with your heuristic to determine which actions/states are better
+	 * to explore.
+	 *
+	 * @return The current cost to reach this goal
+	 */
+	public double getCost() {
+		//This method is very brief since other methods like addCost() update the cost when creating a new gameState
+		return this.cost;
+	}
 
-    /**
-     * This is necessary to use your state in the Java priority queue. See the official priority queue and Comparable
-     * interface documentation to learn how this function should work.
-     *
-     * @param o The other game state to compare
-     * @return 1 if this state costs more than the other, 0 if equal, -1 otherwise
-     */
-    @Override
+	/**
+	 * This is necessary to use your state in the Java priority queue. See the
+	 * official priority queue and Comparable interface documentation to learn how
+	 * this function should work.
+	 *
+	 * @param o
+	 *            The other game state to compare
+	 * @return 1 if this state costs more than the other, 0 if equal, -1 otherwise
+	 */
+	@Override
     public int compareTo(GameState o) {
         // TODO: Implement me!
     	double cost1 = o.heuristic() + o.getCost();
@@ -475,4 +517,5 @@ public class GameState implements Comparable<GameState> {
 	public int hashCode() {
 		return Objects.hash(currentGold, currentWood, units);
 	}
+
 }
