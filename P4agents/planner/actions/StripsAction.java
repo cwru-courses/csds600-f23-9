@@ -38,6 +38,13 @@ public interface StripsAction {
      * @return State resulting from successful action appliction.
      */
     public GameState apply(GameState state);
-
-	Action createActionSEPIA();
+    
+    public GameState getParent();
+    
+    
+    /**
+     * creates a SEPIA Action from the STRIPS Action
+     * @return the equivalent SEPIA Action
+     */
+    public Action returnSepaiaActionBack();
 }
