@@ -91,8 +91,7 @@ public class PlannerAgent extends Agent {
      * @return The plan or null if no plan is found.
      */
     private Stack<StripsAction> AstarSearch(GameState startState) {
-                // Create open and closed lists
-        Stack<StripsAction> finalPath= new Stack<>();
+                Stack<StripsAction> finalPath= new Stack<>();
  		Set<GameState> closedList = new HashSet<>();
  		PriorityQueue<GameState> openList = new PriorityQueue<>();
  		openList.add(startState);
@@ -110,7 +109,14 @@ public class PlannerAgent extends Agent {
  				return finalPath;
  			}
  			closedList.add(currentNode);
- 			
+ 			for (GameState state : currentNode.generateChildren()) {
+ 				boolean b = false;
+ 				if (!closedList.contains(state)) {
+ 	 				for(GameState state1:openList) {
+ 	 					if(!(state1.getCost()<state.getCost() && state1.equals(state))) {
+ 	 						openList.remove(state);
+ 	 					}
+ 	 				}
  					openList.add(state);
  				}
  			}
