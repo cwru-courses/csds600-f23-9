@@ -104,23 +104,32 @@ public class PEAgent extends Agent {
 	 */
 	@Override
 	public Map<Integer, Action> middleStep(State.StateView stateView, History.HistoryView historyView) {
+		//map to store list of actions mapped and unitIDs
 		Map<Integer, Action> actionList = new HashMap<>();
-		
+		//To view a specific player and trun , retrive the action results from history
 		Map<Integer, ActionResult> actionResults = historyView.getCommandFeedback(playernum, stateView.getTurnNumber() - 1);
+		//loop to check all action results
 		for(ActionResult actionresult : actionResults.values()) {
+			//To check weather condition is actually failed or not
 			if(actionresult.getFeedback() == ActionFeedback.FAILED) {
+				//add the action actionList, here unitID is key
 				actionList.put(actionresult.getAction().getUnitId(), actionresult.getAction());
 			}else if(actionresult.getFeedback() == ActionFeedback.INCOMPLETE) {
+				//if feedback is incomplete return the actionList(as of now)
 				return actionList;
 			}
 		}
+		//
 		if(actionList.isEmpty()) {
 			StripsAction sActions = plan.pop();
 			if(sActions.preconditionsMet(sActions.getParent())) {
+				//create sepia actions from StripsAction
 				Action action1 = createSepiaAction(sActions);
+				// to retrive action results from history view for a specific player turn
 				actionList.put(action1.getUnitId(), action1);
 			}
 		}
+		//return actionList
 		return actionList;
 
 	}
