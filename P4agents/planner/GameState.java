@@ -216,19 +216,19 @@ public class GameState implements Comparable<GameState> {
 				Position pos1 = new Position(xPos, yPos);
 				Position pos2 = new Position(townHall.getXPosition(), townHall.getYPosition());
 				
-				StripsActionImpl goldHarvest = new StripsActionImpl(unitView, pos1,null, this,true);
+				StripsAction goldHarvest = new StripsActionImpl(unitView, pos1,null, this,true);
 				if (goldHarvest.preconditionsMet(this)) {
 					returnList.add(goldHarvest.apply(this));
 				}
-				StripsActionImpl goldDeposit = new StripsActionImpl(unitView, pos1, pos2, this,true);
+				StripsAction goldDeposit = new StripsActionImpl(unitView, pos1, pos2, this,true);
 				if (goldDeposit.preconditionsMet(this)) {
 					returnList.add(goldDeposit.apply(this));
 				}
-				StripsActionImpl woodHarvest = new StripsActionImpl(unitView, pos1,null, this,false);
+				StripsAction woodHarvest = new StripsActionImpl(unitView, pos1,null, this,false);
 				if (woodHarvest.preconditionsMet(this)) {
 					returnList.add(woodHarvest.apply(this));
 				}
-				StripsActionImpl woodDeposit = new StripsActionImpl(unitView, pos1, pos2, this,false);
+				StripsAction woodDeposit = new StripsActionImpl(unitView, pos1, pos2, this,false);
 				if (woodDeposit.preconditionsMet(this)) {
 					returnList.add(woodDeposit.apply(this));
 				}
@@ -467,7 +467,6 @@ public class GameState implements Comparable<GameState> {
 	 * @return The current cost to reach this goal
 	 */
 	public double getCost() {
-		//This method is very brief since other methods like addCost() update the cost when creating a new gameState
 		return this.cost;
 	}
 
@@ -482,7 +481,6 @@ public class GameState implements Comparable<GameState> {
 	 */
 	@Override
     public int compareTo(GameState o) {
-        // TODO: Implement me!
     	double cost1 = o.heuristic() + o.getCost();
     	double cost2 = this.heuristic()+ this.getCost();
     	double returnValue= cost2-cost1;
