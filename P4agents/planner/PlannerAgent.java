@@ -91,7 +91,56 @@ public class PlannerAgent extends Agent {
      * @return The plan or null if no plan is found.
      */
     private Stack<StripsAction> AstarSearch(GameState startState) {
-        // TODO: Implement me!
+                // Create open and closed lists
+        PriorityQueue<GameState> openList = new PriorityQueue<>(new Comparator<GameState>() {
+            @Override
+            public int compare(GameState state1, GameState state2) {
+                return Double.compare(state1.getCost(), state2.getCost());
+            }
+        });
+        Set<GameState> closedList = new HashSet<>();
+
+        // Add the start state to the open list
+        openList.add(startState);
+
+        // A map to store parent pointers for backtracking
+        Map<GameState, GameState> parentMap = new HashMap<>();
+
+        while (!openList.isEmpty()) {
+            // Pop the node with the lowest cost
+            GameState currentState = openList.poll();
+
+            // Check if the current state is a goal
+            if (currentState.isGoal()) {
+                // Reconstruct and return the plan
+                Stack<StripsAction> plan = new Stack<>();
+                GameState current = currentState;
+
+                while (parentMap.containsKey(current)) {
+                    GameState parent = parentMap.get(current);
+                    plan.push(current.getGeneratingAction(parent));
+                    current = parent;
+                }
+
+                return plan;
+            }
+
+            // Add the current state to the closed list
+            closedList.add(currentState);
+
+            // Generate successor states
+            List<GameState> successors = currentState.generateChildren();
+
+            for (GameState successor : successors) {
+                if (!closedList.contains(successor) && !openList.contains(successor)) {
+                    // Set parent pointer for backtracking
+                    parentMap.put(successor, currentState);
+                    openList.add(successor);
+                }
+            }
+        }
+
+        // No plan found
         return null;
     }
 
