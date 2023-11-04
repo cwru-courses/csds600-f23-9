@@ -45,6 +45,10 @@ public class GameState implements Comparable<GameState> {
 	public boolean[][] map;
 	public int[][] goldMapArray, woodmapArray;
 
+	public GameState() {
+		super();
+	}
+
 	public List<UnitView> units= new ArrayList<>();
 	public List<UnitView> playerUnits = new ArrayList<>();
 	public UnitView townHall;
