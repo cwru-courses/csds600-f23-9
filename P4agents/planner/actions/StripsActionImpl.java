@@ -1,4 +1,4 @@
-;;package edu.cwru.sepia.agent.planner.actions;
+package edu.cwru.sepia.agent.planner.actions;
 
 import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.agent.planner.GameState;
