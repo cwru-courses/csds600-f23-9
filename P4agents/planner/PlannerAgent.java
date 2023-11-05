@@ -91,16 +91,23 @@ public class PlannerAgent extends Agent {
      * @return The plan or null if no plan is found.
      */
     private Stack<StripsAction> AstarSearch(GameState startState) {
-                Stack<StripsAction> finalPath= new Stack<>();
+        // Initialize the stack to store the final path, the closed list to keep track of visited states,
+       // and the open list to manage states to explore.
+        Stack<StripsAction> finalPath= new Stack<>();
  		Set<GameState> closedList = new HashSet<>();
  		PriorityQueue<GameState> openList = new PriorityQueue<>();
+        // Add the initial state to the open list to start the search.
  		openList.add(startState);
+        // While there are states to explore in the open list
  		while (!openList.isEmpty()) {
+            // Get the state with the lowest cost from the open list.
  			GameState currentNode = openList.poll();
+            // If the current node is the goal state, reconstruct and return the path.
  			if (currentNode.isGoal()) {
  				Stack<StripsAction> stackResult = new Stack<>();
  				GameState state = currentNode;
  				List<StripsAction> list = state.plan;
+                // Reverse the list to get the correct order of actions in the path.
  				while (!list.isEmpty()) {
  					stackResult.push(list.remove(list.size()-1));
  				}
@@ -108,19 +115,26 @@ public class PlannerAgent extends Agent {
  				finalPath = stackResult;
  				return finalPath;
  			}
+            // Add the current node to the closed list, indicating that it has been visited.
  			closedList.add(currentNode);
+            // Generate children of the current node and consider adding them to the open list.
  			for (GameState state : currentNode.generateChildren()) {
  				boolean b = false;
+                // If the child state is not in the closed list, proceed.
  				if (!closedList.contains(state)) {
+                    // Check if there's a better path to this state in the open list.
  	 				for(GameState state1:openList) {
  	 					if(!(state1.getCost()<state.getCost() && state1.equals(state))) {
+                            // Remove the state from the open list if a better path is found.
  	 						openList.remove(state);
  	 					}
  	 				}
+                    // Add the state to the open list.
  					openList.add(state);
  				}
  			}
  		}
+        // If no path to the goal state is found, return an empty path.
  		return finalPath;
     }
 
