@@ -188,6 +188,18 @@ public class GameState implements Comparable<GameState> {
 		}
 		return array;
 	}
+	
+	private void getToResource(List<GameState> returnList, UnitView unitView, Position pos) {
+		for (Direction dir : Direction.values()) { // get to townHall
+			int newX = pos.x + dir.xComponent();
+			int newY = pos.y + dir.yComponent();
+			StripsActionImpl actionStrip = new StripsActionImpl(unitView, new Position(newX, newY), null,this,null);
+			if (actionStrip.preconditionsMet(this)) {
+				returnList.add(actionStrip.apply(this));
+				continue;
+			}
+		}
+	}
 
 	/**
 	 * Unlike in the first A* assignment there are many possible goal states. As
@@ -254,20 +266,7 @@ public class GameState implements Comparable<GameState> {
 
 		}
 		return returnList;
-	}
-	
-	private void getToResource(List<GameState> returnList, UnitView unitView, Position pos) {
-		for (Direction dir : Direction.values()) { // get to townHall
-			int newX = pos.x + dir.xComponent();
-			int newY = pos.y + dir.yComponent();
-			StripsActionImpl actionStrip = new StripsActionImpl(unitView, new Position(newX, newY), null,this,null);
-			if (actionStrip.preconditionsMet(this)) {
-				returnList.add(actionStrip.apply(this));
-				continue;
-			}
-		}
-	}
-	
+	}	
 	
 	/**
 	 * given a position and the resource we are trying to get, this determines the position of the best resourceNode to go to
