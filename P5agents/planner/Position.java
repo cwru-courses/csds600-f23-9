@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Devin on 3/15/15.
  *
  * I've provided you with a simple Position class with some helper methods. Use this for any place you need to track
  * a location. If you need modify the methods and add new ones. If you make changes add a note here about what was
