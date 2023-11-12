@@ -1,12 +1,11 @@
 package edu.cwru.sepia.agent.planner;
 
-import edu.cwru.sepia.agent.planner.actions.StripActionImpl;
-import edu.cwru.sepia.environment.model.state.State;
+import edu.cwru.sepia.agent.planner.actions.*;
+import edu.cwru.sepia.environment.model.state.*;
+import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
+import edu.cwru.sepia.environment.model.state.Unit.UnitView;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.text.Position;
+import java.util.*;
 
 /**
  * This class is used to represent the state of the game after applying one of the avaiable actions. It will also
@@ -410,7 +409,12 @@ public class GameState implements Comparable<GameState> {
      */
     @Override
     public boolean equals(Object o) {
-        // TODO: Implement me!
+    	if(o instanceof GameState) {
+    		GameState gState = (GameState) o;
+    		if(gState.currentGold==this.currentGold && gState.currentWood== this.currentWood && gState.units==this.units) {
+    			return true;
+    		}
+    	}
         return false;
     }
 
@@ -422,7 +426,33 @@ public class GameState implements Comparable<GameState> {
      */
     @Override
     public int hashCode() {
-        // TODO: Implement me!
-        return 0;
+       return Objects.hash(currentGold, currentWood, units);
     }
+
+    public class Peasant {
+	    public int id;
+	    public Position adjPos;
+	    public int xPos;
+	    public int yPos;
+	    public boolean containsWood;
+	    public boolean containsGold;
+	    public int amount = 0;
+
+	    public void clear_cargo() {
+			this.containsGold = false;
+			this.containsWood = false;
+			this.amount = 0;
+		}
+
+		public Peasant(int id, int xPos, int yPos, boolean containsGold, boolean containsWood, int anount, Position adjPos) {
+			this.id = id;
+			this.xPos = xPos;
+			this.yPos = yPos;
+			this.containsGold = containsGold;
+			this.containsWood = containsWood;
+			this.amount = anount;
+			this.adjPos = adjPos;
+		}
+
+	}
 }
