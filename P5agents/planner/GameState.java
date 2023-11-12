@@ -2,7 +2,10 @@ package edu.cwru.sepia.agent.planner;
 
 import edu.cwru.sepia.environment.model.state.State;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.text.Position;
 
 /**
  * This class is used to represent the state of the game after applying one of the avaiable actions. It will also
@@ -37,6 +40,24 @@ import java.util.List;
  */
 public class GameState implements Comparable<GameState> {
 
+    public State.StateView state;
+	public int playerNum,requiredGold, requiredWood, currentGold, currentWood,xExtent, yExtent,currentFood;
+	public boolean buildPeasants;
+
+	public List<ResourceView> resourceNodes;
+	public List<edu.cwru.sepia.agent.planner.GameState.Peasant> peasantUnits = new ArrayList<>();
+	public boolean[][] map;
+	public int[][] goldMapArray, woodmapArray;
+
+	public List<UnitView> units= new ArrayList<>();
+	public List<UnitView> playerUnits = new ArrayList<>();
+	public UnitView townHall;
+
+	public double cost;
+	public List<StripsAction> plan;
+	public GameState parent;
+	public double heuristic;
+
     /**
      * Construct a GameState from a stateview object. This is used to construct the initial search node. All other
      * nodes should be constructed from the another constructor you create or by factory functions that you create.
@@ -48,7 +69,61 @@ public class GameState implements Comparable<GameState> {
      * @param buildPeasants True if the BuildPeasant action should be considered
      */
     public GameState(State.StateView state, int playernum, int requiredGold, int requiredWood, boolean buildPeasants) {
-        // TODO: Implement me!
+    	this.state=state;
+		this.playerNum = playernum;
+		this.requiredGold = requiredGold;// Set req Gold
+		this.requiredWood = requiredWood;// Set req Wood
+		this.currentGold = state.getResourceAmount(playernum, ResourceType.GOLD); // Set current Gold
+		this.currentWood = state.getResourceAmount(playernum, ResourceType.WOOD); // Set current Wood
+        this.currentFood = state.getSupplyAmount(playernum);
+		this.plan = new ArrayList<>();
+		this.buildPeasants = buildPeasants;
+		this.cost = getCost();
+		this.parent = null;
+		this.xExtent = state.getXExtent();// Get xExtent Map Size
+		this.yExtent = state.getYExtent();// Get yExtent Map Size
+		this.units = state.getAllUnits();// Get list of all units
+		
+        for (UnitView unitView : units) {
+			if (unitView.getTemplateView().getPlayer() == playerNum) {
+				if (unitView.getTemplateView().getName().equalsIgnoreCase("peasant")) {
+					playerUnits.add(unitView);
+                    Position pos = new Position(townHall.getXPosition(), townHall.getYPosition());
+                    Peasant p = new Peasant(unitView.getID(), unitView.getXPosition(), unitView.getYPosition(),false,false,unitView.getCargoAmount(),pos);
+					if (unitView.getCargoType() == ResourceType.GOLD) {
+						p.containsGold = true;
+                        p.containsWood = false;
+					} else if (unitView.getCargoType() == ResourceType.WOOD) {
+                        p.containsGold = false;
+						p.containsWood = true;
+					}
+					this.peasantUnits.add(p);
+				} else if (unitView.getTemplateView().getName().equalsIgnoreCase("townhall")) {
+					this.townHall = unitView;
+				}
+			}
+		}
+		this.map = new boolean[xExtent][yExtent]; 
+		this.goldMapArray = new int[xExtent][yExtent]; // for gold resource location in map
+		this.woodmapArray = new int[xExtent][yExtent]; // for wood resource location in map
+		for (int x = 0; x < xExtent; x++) {
+			for (int y = 0; y < yExtent; y++) {
+				map[x][y] = false;
+				woodmapArray[x][y] = 0;
+				goldMapArray[x][y] = 0;
+			}
+		}
+		map[townHall.getXPosition()][townHall.getYPosition()] = true; // mark town hall position as true in the map
+		this.resourceNodes = state.getAllResourceNodes();// Gives all resources locations on map like gold, wood
+		for (ResourceView resourceView : resourceNodes) {
+			map[resourceView.getXPosition()][resourceView.getYPosition()] = true;// Marks all the resource locations as true in the map.
+			if (resourceView.getType() == ResourceNode.Type.TREE) {
+				woodmapArray[resourceView.getXPosition()][resourceView.getYPosition()] = resourceView.getAmountRemaining();
+			}else if (resourceView.getType() == ResourceNode.Type.GOLD_MINE) {
+				goldMapArray[resourceView.getXPosition()][resourceView.getYPosition()] = resourceView.getAmountRemaining();
+			}
+		}
+		this.heuristic = heuristic();
     }
 
     /**
