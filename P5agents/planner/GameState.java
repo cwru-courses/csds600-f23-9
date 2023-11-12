@@ -126,6 +126,84 @@ public class GameState implements Comparable<GameState> {
 		this.heuristic = heuristic();
     }
 
+    public GameState() {
+		super();
+	}
+
+    public GameState(GameState state) {
+		this.state = state.state;
+		this.playerNum = state.playerNum;
+        this.xExtent = state.xExtent;
+		this.yExtent = state.yExtent;
+        this.buildPeasants = state.buildPeasants;
+		this.parent = state;
+		this.requiredWood = state.requiredWood;
+		this.currentGold = state.currentGold;
+		this.currentWood = state.currentWood;
+		this.requiredGold = state.requiredGold;
+		this.townHall = state.townHall;
+		this.currentFood = state.currentFood;
+		this.map = returnMap(state.map);
+		this.goldMapArray = returnMap(state.goldMapArray);
+		this.woodmapArray = returnMap(state.woodmapArray);
+		this.units = setUnits(state.units);
+		this.playerUnits = setUnits(state.playerUnits);
+
+        List<Peasant> peasants = new ArrayList<>();
+		for (Peasant p : state.peasantUnits) {
+			Peasant p_unit = new Peasant(p.id, p.xPos, p.yPos, p.containsGold, p.containsWood, p.amount, p.adjPos);
+			peasants.add(p_unit);
+		}
+		this.peasantUnits = peasants;
+		
+		List<ResourceView> resource1 = new ArrayList<>();
+		state.resourceNodes.stream().forEach(view1 -> {
+			resource1.add(new ResourceView(new ResourceNode(view1.getType(), view1.getXPosition(),view1.getYPosition(), view1.getAmountRemaining(), view1.getID())));
+		});
+		this.resourceNodes = resource1;
+
+		this.cost = getCost();
+		List<StripsAction> stripActionsList = new ArrayList<>();
+		for (StripsAction element : state.plan) {
+			stripActionsList.add(element);
+		}
+		this.plan = stripActionsList;
+		this.heuristic=heuristic();
+	}
+
+    private boolean[][] returnMap(boolean[][] intArray){
+		boolean[][] array = new boolean[intArray.length][intArray[0].length];
+		for (int i = 0; i < intArray.length; i++) {
+			for (int j = 0; j <intArray[0].length; j++) {
+				array[i][j] = intArray[i][j];
+			}
+		}
+		return array;
+	}
+	
+	private int[][] returnMap(int[][] intArray){
+		int[][] array = new int[intArray.length][intArray[0].length];
+		for (int i = 0; i < intArray.length; i++) {
+			for (int j = 0; j <intArray[0].length; j++) {
+				array[i][j] = intArray[i][j];
+			}
+		}
+		return array;
+	}
+	
+	private List<UnitView> setUnits(List<UnitView> unitss) {
+		List<UnitView> units = new ArrayList<>();
+		for (UnitView uv : unitss) {
+			Unit unit = new Unit(new UnitTemplate(uv.getID()), uv.getID());
+			unit.setxPosition(uv.getXPosition());
+			unit.setyPosition(uv.getYPosition());
+            unit.setCargo(uv.getCargoType(), uv.getCargoAmount());
+			units.add(new UnitView(unit));
+		}
+		return units;
+	}
+
+
     /**
      * Unlike in the first A* assignment there are many possible goal states. As long as the wood and gold requirements
      * are met the peasants can be at any location and the capacities of the resource locations can be anything. Use
