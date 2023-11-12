@@ -11,7 +11,7 @@ import java.util.List;
  * a location. If you need modify the methods and add new ones. If you make changes add a note here about what was
  * changed and why.
  *
- * This class is immutable, meaning any changes creates an entirely separate copy.
+ * This class is immutable, meaning any changes creates an entirely separate copy
  */
 public class Position {
 
