@@ -1,11 +1,15 @@
 package edu.cwru.sepia.agent.planner.actions;
 
+import java.util.List;
+
+import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.agent.planner.GameState;
 
 /**
- * A useful start of an interface representing strips actions. You may add new methods to this interface if needed, but
- * you should implement the ones provided. You may also find it useful to specify a method that returns the effects
- * of a StripsAction.
+ * A useful start of an interface representing strips actions. You may add new
+ * methods to this interface if needed, but you should implement the ones
+ * provided. You may also find it useful to specify a method that returns the
+ * effects of a StripsAction.
  */
 public interface StripsAction {
 
@@ -37,4 +41,23 @@ public interface StripsAction {
      * @return State resulting from successful action appliction.
      */
     public GameState apply(GameState state);
+
+	public GameState getParent();
+
+	/**
+	 * returns the String representation of the STRIPS Action that will be written
+	 * to the text file
+	 * 
+	 * @return the String representation of the STRIPS Action that will be written
+	 *         to the text file
+	 */
+	@Override
+	public String toString();
+
+	/**
+	 * creates a SEPIA Action from the STRIPS Action
+	 * 
+	 * @return the equivalent SEPIA Action
+	 */
+	public List<Action> createSEPIAaction();
 }
