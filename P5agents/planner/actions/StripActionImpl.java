@@ -127,7 +127,9 @@ public class StripActionImpl implements StripsAction{
 	            } else if (p1.containsWood) {
 	            	result.currentWood += p1.amount;
 	            }
-	            p1.setCargo();
+	            p1.containsGold = false;
+	            p1.containsWood = false;
+	            p1.amount = 0;
 	            sepiaAction.add(Action.createPrimitiveDeposit(p1.id, getDitectionLegal(p1.xPos, p1.yPos, townHallPos.x, townHallPos.y)));
 			}
 		}else if(null!=resourcePos) {

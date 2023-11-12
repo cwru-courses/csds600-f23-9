@@ -443,12 +443,6 @@ public class GameState implements Comparable<GameState> {
 	    public boolean containsGold;
 	    public int amount = 0;
 
-	    public void setCargo() {
-			this.containsGold = false;
-			this.containsWood = false;
-			this.amount = 0;
-		}
-
 		public Peasant(int id, int xPos, int yPos, boolean containsGold, boolean containsWood, int anount, Position adjPos) {
 			this.id = id;
 			this.xPos = xPos;
