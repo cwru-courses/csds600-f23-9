@@ -335,9 +335,47 @@ public class GameState implements Comparable<GameState> {
      * @return The value estimated remaining cost to reach a goal state from this state.
      */
     public double heuristic() {
-        // TODO: Implement me!
-        return 0.0;
+        int goldDiffernce = requiredGold - currentGold;
+     	int woodDifference = requiredWood - currentWood;
+        double result = goldDiffernce + woodDifference;
+		for (Peasant peasant : peasantUnits) {
+			int cargoAmount = peasant.amount;
+			if (cargoAmount > 0) {
+				if (deposit(peasant)) {
+					result = result - cargoAmount * 0.63;
+				} else {
+					result = result - cargoAmount * 0.5;
+				}
+			} else {
+                int anount = harvest(peasant);
+                if (anount > 0) {
+                    result = result -  anount * 0.25;
+                }
+			}
+		}
+ 		this.heuristic = result / peasantUnits.size();
+ 		return result;
     }
+
+    public boolean deposit(Peasant p) {
+		//(Math.sqrt(Math.pow(p.x_pos - townHall.getXPosition(), 2) + Math.pow(p.y_pos - townHall.getYPosition(), 2)
+		if (Math.abs(p.yPos - townHall.getYPosition()) <= 1 && Math.abs(p.xPos - townHall.getXPosition()) <= 1) {
+			return true;
+		}
+		return false;
+	}
+
+    public int harvest(Peasant p) {
+        int k = 0;
+        for (int i = p.xPos - 1; i <= p.xPos + 1; i++) {
+			for (int j = p.yPos - 1; j <= p.yPos + 1; j++) {
+				if (goldMapArray[i][j] + woodmapArray[i][j] > k && goldMapArray[i][j] != 0 || woodmapArray[i][j] != 0) {
+					k = goldMapArray[i][j] + woodmapArray[i][j];
+                }
+			}
+		}
+		return k>100 ? 100 : k;
+	}
 
     /**
      *
