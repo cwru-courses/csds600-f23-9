@@ -212,8 +212,7 @@ public class GameState implements Comparable<GameState> {
      * @return true if the goal conditions are met in this instance of game state.
      */
     public boolean isGoal() {
-        // TODO: Implement me!
-        return false;
+        return (this.currentGold >= this.requiredGold && this.currentWood >= this.requiredWood);
     }
 
     /**
@@ -248,8 +247,7 @@ public class GameState implements Comparable<GameState> {
      * @return The current cost to reach this goal
      */
     public double getCost() {
-        // TODO: Implement me!
-        return 0.0;
+        return this.cost;
     }
 
     /**
@@ -260,11 +258,12 @@ public class GameState implements Comparable<GameState> {
      * @return 1 if this state costs more than the other, 0 if equal, -1 otherwise
      */
     @Override
-    public int compareTo(GameState o) {
-        // TODO: Implement me!
-        return 0;
-    }
+	public int compareTo(GameState o) {
+		double thisTotalCost = this.getCost() + this.heuristic();
+		double totalCost = o.getCost() + o.heuristic();
 
+		return (int) (thisTotalCost - totalCost);
+	}
     /**
      * This will be necessary to use the GameState as a key in a Set or Map.
      *
