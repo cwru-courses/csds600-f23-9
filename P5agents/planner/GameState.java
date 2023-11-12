@@ -443,7 +443,7 @@ public class GameState implements Comparable<GameState> {
 	    public boolean containsGold;
 	    public int amount = 0;
 
-	    public void clear_cargo() {
+	    public void setCargo() {
 			this.containsGold = false;
 			this.containsWood = false;
 			this.amount = 0;
