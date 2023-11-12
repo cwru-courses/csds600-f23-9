@@ -1,5 +1,6 @@
 package edu.cwru.sepia.agent.planner;
 
+import edu.cwru.sepia.agent.planner.actions.StripActionImpl;
 import edu.cwru.sepia.environment.model.state.State;
 
 import java.util.ArrayList;
@@ -222,9 +223,108 @@ public class GameState implements Comparable<GameState> {
      * @return A list of the possible successor states and their associated actions
      */
     public List<GameState> generateChildren() {
-        // TODO: Implement me!
-        return null;
+		List<GameState> returnList = new ArrayList<>();
+		for (List<Peasant> listPea : returnPeasantsList()) {
+			Position goldBest = findBestResource(new Position(listPea.get(0).xPos, listPea.get(0).yPos), ResourceNode.Type.GOLD_MINE);
+			if (goldBest != null) {
+				StripActionImpl goToGold = new StripActionImpl(listPea, goldBest, this);
+				if (goToGold.preconditionsMet(this)) {
+					returnList.add(goToGold.apply(this));
+				}
+			}
+			Position woodBest = findBestResource(new Position(peasantUnits.get(0).xPos, peasantUnits.get(0).yPos), ResourceNode.Type.TREE);
+			if (woodBest != null) {
+				StripActionImpl goToWood = new StripActionImpl(listPea, woodBest, this);
+				if (goToWood.preconditionsMet(this)) {
+					returnList.add(goToWood.apply(this));
+				}
+			}
+			Position townhallPosition = new Position(this.townHall.getXPosition(), this.townHall.getYPosition());
+			StripActionImpl depositResource = new StripActionImpl(listPea, townhallPosition,null, this);
+			if (depositResource.preconditionsMet(this)) {
+				returnList.add((depositResource.apply(this)));
+			}
+			StripActionImpl goToTownhall = new StripActionImpl(listPea, townhallPosition, this);
+			if (goToTownhall.preconditionsMet(this)) {
+				returnList.add(goToTownhall.apply(this));
+			}
+			StripActionImpl goldHarvest = new StripActionImpl(listPea, null, goldBest, this);
+			if (goldHarvest.preconditionsMet(this)) {
+				returnList.add(goldHarvest.apply(this));
+			}
+			StripActionImpl woodHarvest = new StripActionImpl(listPea, null,woodBest, this);
+			if (woodHarvest.preconditionsMet(this)) {
+				returnList.add(woodHarvest.apply(this));
+			}
+		}
+		return returnList;
     }
+
+    private Position findBestResource(Position currentPosition, ResourceNode.Type type) {
+		Position best = null;
+		int resource = 0;
+		int dist = 0;
+		int requiredAmount,currentAmount;
+		int[][] map;
+		if(type == ResourceNode.Type.GOLD_MINE) {
+			requiredAmount = requiredGold;
+			currentAmount = currentGold;
+			map = goldMapArray;
+		}
+		else {
+			requiredAmount = requiredWood;
+			currentAmount = currentWood;
+			map = woodmapArray;
+		}
+		
+		for(int i = 0; i < map.length; i ++) {// Iterating the map to find the nearest position of resource
+			for(int j = 0; j < map[i].length; j ++) {
+				int currentBest = map[i][j];
+				if(currentBest > 0) {
+					int distance = currentPosition.chebyshevDistance(new Position(i, j));;
+					if(best == null) {
+						dist = distance;
+						best = new Position(i, j);
+						resource = currentBest;
+					} else {
+						if(distance <= dist && currentBest >= resource || currentBest >= requiredAmount - currentAmount) {
+							dist = distance;
+							best = new Position(i, j);
+							resource = currentBest;
+						}else {
+							if(resource >= 100 && currentBest >= resource && currentBest >= 100 && resource < requiredAmount - currentAmount) {
+								dist = distance;
+								best = new Position(i, j);
+								resource = currentBest;
+							}
+						}
+					}
+				}
+			}
+		}
+		return best;
+	}
+    
+    private List<List<Peasant>> returnPeasantsList() {
+		List<List<Peasant>> listPeasants = new ArrayList<>();
+        List<Peasant> peasants = new ArrayList<>();
+        this.peasantUnits.stream().forEach(p1->{
+        	Peasant p2 = new Peasant(p1.id, p1.xPos, p1.yPos, p1.containsGold, p1.containsWood, p1.amount, p1.adjPos);
+        	peasants.add(p2);
+        });
+
+		for (int i = 0; i < (1<<this.peasantUnits.size()); i++) {
+			List<Peasant> list1 = new ArrayList<>();
+			for (int j = 0; j < this.peasantUnits.size(); j++) {
+				if ((i & (1 << j)) > 0) {
+					list1.add(peasants.get(j));
+				}
+			}
+			listPeasants.add(list1);
+		}
+		listPeasants.remove(0);
+		return listPeasants;
+	}
 
     /**
      * Write your heuristic function here. Remember this must be admissible for the properties of A* to hold. If you
