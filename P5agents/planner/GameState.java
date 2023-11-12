@@ -20,18 +20,18 @@ import java.util.*;
  * Some useful API calls for the state view are
  *
  * state.getXExtent() and state.getYExtent() to get the map size
- * 
- * Note that SEPIA saves the townhall as a unit. Therefore when you create a GameState instance,
+ *
+  * Note that SEPIA saves the townhall as a unit. Therefore when you create a GameState instance,
  * you must be able to distinguish the townhall from a peasant. This can be done by getting
  * the name of the unit type from that unit's TemplateView:
  * state.getUnit(id).getTemplateView().getName().toLowerCase(): returns "townhall" or "peasant"
- * 
+ *
  * You will also need to distinguish between gold mines and trees.
  * state.getResourceNode(id).getType(): returns the type of the given resource
- * 
+ *
  * You can compare these types to values in the ResourceNode.Type enum:
  * ResourceNode.Type.GOLD_MINE and ResourceNode.Type.TREE
- * 
+ *
  * You can check how much of a resource is remaining with the following:
  * state.getResourceNode(id).getAmountRemaining()
  *
@@ -39,8 +39,8 @@ import java.util.*;
  * class/structure you use to represent actions.
  */
 public class GameState implements Comparable<GameState> {
-
-    public State.StateView state;
+	
+	public State.StateView state;
 	public int playerNum,requiredGold, requiredWood, currentGold, currentWood,xExtent, yExtent,currentFood;
 	public boolean buildPeasants;
 
@@ -58,6 +58,7 @@ public class GameState implements Comparable<GameState> {
 	public GameState parent;
 	public double heuristic;
 
+
     /**
      * Construct a GameState from a stateview object. This is used to construct the initial search node. All other
      * nodes should be constructed from the another constructor you create or by factory functions that you create.
@@ -68,7 +69,7 @@ public class GameState implements Comparable<GameState> {
      * @param requiredWood The goal amount of wood (e.g. 200 for the small scenario)
      * @param buildPeasants True if the BuildPeasant action should be considered
      */
-    public GameState(State.StateView state, int playernum, int requiredGold, int requiredWood, boolean buildPeasants) {
+	public GameState(State.StateView state, int playernum, int requiredGold, int requiredWood, boolean buildPeasants) {
     	this.state=state;
 		this.playerNum = playernum;
 		this.requiredGold = requiredGold;// Set req Gold
@@ -124,13 +125,13 @@ public class GameState implements Comparable<GameState> {
 			}
 		}
 		this.heuristic = heuristic();
-    }
-
-    public GameState() {
+	}
+	
+	public GameState() {
 		super();
 	}
 
-    public GameState(GameState state) {
+	public GameState(GameState state) {
 		this.state = state.state;
 		this.playerNum = state.playerNum;
         this.xExtent = state.xExtent;
@@ -170,8 +171,8 @@ public class GameState implements Comparable<GameState> {
 		this.plan = stripActionsList;
 		this.heuristic=heuristic();
 	}
-
-    private boolean[][] returnMap(boolean[][] intArray){
+	
+	private boolean[][] returnMap(boolean[][] intArray){
 		boolean[][] array = new boolean[intArray.length][intArray[0].length];
 		for (int i = 0; i < intArray.length; i++) {
 			for (int j = 0; j <intArray[0].length; j++) {
@@ -203,7 +204,6 @@ public class GameState implements Comparable<GameState> {
 		return units;
 	}
 
-
     /**
      * Unlike in the first A* assignment there are many possible goal states. As long as the wood and gold requirements
      * are met the peasants can be at any location and the capacities of the resource locations can be anything. Use
@@ -211,17 +211,44 @@ public class GameState implements Comparable<GameState> {
      *
      * @return true if the goal conditions are met in this instance of game state.
      */
-    public boolean isGoal() {
-        return (this.currentGold >= this.requiredGold && this.currentWood >= this.requiredWood);
+	public boolean isGoal() {
+		return (this.currentGold >= this.requiredGold && this.currentWood >= this.requiredWood);
+	}
+
+    /**
+     * Write the function that computes the current cost to get to this node. This
+     * is combined with your heuristic to determine which actions/states are better
+     * to explore.
+     *
+     * @return The current cost to reach this goal
+     */
+    public double getCost() {
+        return this.cost;
     }
 
     /**
-     * The branching factor of this search graph are much higher than the planning. Generate all of the possible
-     * successor states and their associated actions in this method.
+     * This is necessary to use your state in the Java priority queue. See the official priority queue and Comparable
+     * interface documentation to learn how this function should work.
      *
-     * @return A list of the possible successor states and their associated actions
+     * @param o The other game state to compare
+     * @return 1 if this state costs more than the other, 0 if equal, -1 otherwise
      */
-    public List<GameState> generateChildren() {
+	@Override
+	public int compareTo(GameState o) {
+		double thisTotalCost = this.getCost() + this.heuristic();
+		double totalCost = o.getCost() + o.heuristic();
+
+		return (int) (thisTotalCost - totalCost);
+	}
+
+	/**
+	 * The branching factor of this search graph are much higher than the planning.
+	 * Generate all of the possible successor states and their associated actions in
+	 * this method.
+	 *
+	 * @return A list of the possible successor states and their associated actions
+	 */
+	public List<GameState> generateChildren() {
 		List<GameState> returnList = new ArrayList<>();
 		for (List<Peasant> listPea : returnPeasantsList()) {
 			Position goldBest = findBestResource(new Position(listPea.get(0).xPos, listPea.get(0).yPos), ResourceNode.Type.GOLD_MINE);
@@ -257,9 +284,9 @@ public class GameState implements Comparable<GameState> {
 			}
 		}
 		return returnList;
-    }
-
-    private Position findBestResource(Position currentPosition, ResourceNode.Type type) {
+	}
+    
+	private Position findBestResource(Position currentPosition, ResourceNode.Type type) {
 		Position best = null;
 		int resource = 0;
 		int dist = 0;
@@ -325,15 +352,17 @@ public class GameState implements Comparable<GameState> {
 		return listPeasants;
 	}
 
-    /**
-     * Write your heuristic function here. Remember this must be admissible for the properties of A* to hold. If you
-     * can come up with an easy way of computing a consistent heuristic that is even better, but not strictly necessary.
-     *
-     * Add a description here in your submission explaining your heuristic.
-     *
-     * @return The value estimated remaining cost to reach a goal state from this state.
-     */
-    public double heuristic() {
+	/**
+	 * Write your heuristic function here. Remember this must be admissible for the
+	 * properties of A* to hold. If you can come up with an easy way of computing a
+	 * consistent heuristic that is even better, but not strictly necessary.
+	 *
+	 * Add a description here in your submission explaining your heuristic.
+	 *
+	 * @return The value estimated remaining cost to reach a goal state from this
+	 *         state.
+	 */
+     public double heuristic() {
         int goldDiffernce = requiredGold - currentGold;
      	int woodDifference = requiredWood - currentWood;
         double result = goldDiffernce + woodDifference;
@@ -354,9 +383,9 @@ public class GameState implements Comparable<GameState> {
 		}
  		this.heuristic = result / peasantUnits.size();
  		return result;
-    }
+ 	}
 
-    public boolean deposit(Peasant p) {
+	public boolean deposit(Peasant p) {
 		//(Math.sqrt(Math.pow(p.x_pos - townHall.getXPosition(), 2) + Math.pow(p.y_pos - townHall.getYPosition(), 2)
 		if (Math.abs(p.yPos - townHall.getYPosition()) <= 1 && Math.abs(p.xPos - townHall.getXPosition()) <= 1) {
 			return true;
@@ -377,31 +406,6 @@ public class GameState implements Comparable<GameState> {
 	}
 
     /**
-     *
-     * Write the function that computes the current cost to get to this node. This is combined with your heuristic to
-     * determine which actions/states are better to explore.
-     *
-     * @return The current cost to reach this goal
-     */
-    public double getCost() {
-        return this.cost;
-    }
-
-    /**
-     * This is necessary to use your state in the Java priority queue. See the official priority queue and Comparable
-     * interface documentation to learn how this function should work.
-     *
-     * @param o The other game state to compare
-     * @return 1 if this state costs more than the other, 0 if equal, -1 otherwise
-     */
-    @Override
-	public int compareTo(GameState o) {
-		double thisTotalCost = this.getCost() + this.heuristic();
-		double totalCost = o.getCost() + o.heuristic();
-
-		return (int) (thisTotalCost - totalCost);
-	}
-    /**
      * This will be necessary to use the GameState as a key in a Set or Map.
      *
      * @param o The game state to compare
@@ -418,18 +422,19 @@ public class GameState implements Comparable<GameState> {
         return false;
     }
 
+
     /**
      * This is necessary to use the GameState as a key in a HashSet or HashMap. Remember that if two objects are
      * equal they should hash to the same value.
      *
      * @return An integer hashcode that is equal for equal states.
      */
-    @Override
-    public int hashCode() {
-       return Objects.hash(currentGold, currentWood, units);
-    }
+	@Override
+	public int hashCode() {
+		return Objects.hash(currentGold, currentWood, units);
+	}
 
-    public class Peasant {
+	public class Peasant {
 	    public int id;
 	    public Position adjPos;
 	    public int xPos;
@@ -455,4 +460,5 @@ public class GameState implements Comparable<GameState> {
 		}
 
 	}
+
 }
