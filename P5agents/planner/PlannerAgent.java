@@ -10,9 +10,7 @@ import java.io.*;
 import java.util.*;
 
 
-/**
- * Created by Devin on 3/15/15.
- */
+
 public class PlannerAgent extends Agent {
 
     final int requiredWood;
